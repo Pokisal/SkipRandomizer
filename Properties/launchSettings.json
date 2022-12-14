@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DeadRisingTimeSkip": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
