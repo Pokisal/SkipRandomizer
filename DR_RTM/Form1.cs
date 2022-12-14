@@ -204,7 +204,6 @@ namespace DR_RTM
     }
     public class Form1 : Form
     {
-        public static int seed;
 
         private delegate void TimeDisplayUpdateCallback(string text);
 
@@ -218,6 +217,7 @@ namespace DR_RTM
 
         private Label label2;
         public bool button2WasClicked;
+        public static bool WaitFinished = false;
         public static bool spawnEnemies;
         private Label timeDisplay;
         public TextBox textBox1;
@@ -691,7 +691,7 @@ namespace DR_RTM
                 try
                 {
                     int seedInput = Convert.ToInt32(textBox1.Text);
-                    seed = seedInput;
+                    TimeSkip.Seed = seedInput;
                 }
                 catch (FormatException)
                 {
@@ -724,20 +724,17 @@ namespace DR_RTM
         private void button2_Click_1(object sender, EventArgs e)
         {
             TimeRandomized = DateTime.UtcNow;
-            TimeSkip.Seed = seed;
             TimeSkip.OnlyTriggerOnce = false;
             TimeSkip.CreateList();
             TimeSkip.CutsceneList();
-            Thread.Sleep(25);
-            TimeSkip.Randomize();
             TimeSkip.carlitoHideoutFlag = false;
             TimeSkip.RandomizerStarted = false;
             TimeSkip.FactsTriggered = false;
-            if (textBox1.Text == "" || textBox1.Text == "0")
+            if (textBox1.Text == "")
             {
                 TimeSkip.SeedRandomizer();
-                TimeSkip.Randomize();
             }
+            TimeSkip.Randomize();
             TimeSkip.TimeskipOrder.Add(" ");
             TimeSkip.TimeskipOrder.Add(" ");
             TimeSkip.currentSkip = 0;

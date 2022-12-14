@@ -123,7 +123,7 @@ namespace DR_RTM
 
         public static bool RandomizerStarted = false;
 
-        public static int Seed = Form1.seed;
+        public static int Seed;
 
         public static int currentSkip = 0;
 
@@ -169,9 +169,14 @@ namespace DR_RTM
             }
             return string.Format("{0}:{1}:{2} {3}", num.ToString("D2"), num2.ToString("D2"), num3.ToString("D2"), text);
         }
+        public static void SeedRandomizer()
+        {
+            Random rand = new Random();
+            int randomseed = rand.Next(0, 999999999);
+            Seed = randomseed;
+        }
         public static void Shuffle<T>(List<T> list, int seed)
         {
-            Seed = seed;
             var rng = new Random(Seed);
             int n = list.Count;
 
@@ -187,12 +192,6 @@ namespace DR_RTM
         public static void Randomize()
         {
             Shuffle(TimeskipOrder, Seed);
-        }
-        public static void SeedRandomizer()
-        {
-            Random rand = new Random();
-            int randomseed = rand.Next(1, 999999999);
-            Seed = randomseed;
         }
         public static void CreateList()
         {
