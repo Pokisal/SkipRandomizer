@@ -127,8 +127,6 @@ namespace DR_RTM
 
         public static int currentSkip = 0;
 
-        public static int MaxSkips = 0;
-
         private static uint FrankX;
 
         private static uint FrankY;
@@ -475,7 +473,7 @@ namespace DR_RTM
                 {
                     gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 11448000u);
                 }
-                if (campaignProgress == 420 && loadingRoomId == 288 && old.inCutsceneOrLoad && !inCutsceneOrLoad && TimeskipOrder.Count == MaxSkips && includeOvertime == false)
+                if (campaignProgress == 420 && loadingRoomId == 288 && old.inCutsceneOrLoad && !inCutsceneOrLoad && TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == false)
                 {
                     gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 69);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
@@ -1237,7 +1235,7 @@ namespace DR_RTM
                 {
                     gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 11448000u);
                 }
-                if (campaignProgress == 420 && loadingRoomId == 288 && old.inCutsceneOrLoad && !inCutsceneOrLoad && TimeskipOrder.Count == MaxSkips && includeOvertime == false)
+                if (campaignProgress == 420 && loadingRoomId == 288 && old.inCutsceneOrLoad && !inCutsceneOrLoad && TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == false)
                 {
                     gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 69);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);

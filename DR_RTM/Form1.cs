@@ -209,34 +209,38 @@ namespace DR_RTM
 
         private IContainer components;
 
+        public string CurrentlyOn;
+
+        public static bool spawnEnemies;
+
+        public static int MaxSkips;
+
         ContextMenu DummyMenu = new ContextMenu();
 
+        public TextBox textBox1;
+
         public Button button1;
+        public Button button2;
+        public Button button3;
 
         private Label label1;
-
         private Label label2;
-        public bool button2WasClicked;
-        public static bool WaitFinished = false;
-        public static bool spawnEnemies;
-        private Label timeDisplay;
-        public TextBox textBox1;
-        private Button button2;
+        private Label label3;
         private Label label4;
         private Label label5;
-        private CheckBox checkBox1;
-        private CheckBox checkBox2;
         private Label label6;
         private Label label7;
-        private Button button3;
-        private Label label3;
-        public string CurrentlyOn;
-        private Label label8;
+        private Label timeDisplay;
+
+        private CheckBox checkBox1;
+        private CheckBox checkBox2;
+
         private RadioButton radioButton1;
         private RadioButton radioButton2;
         private RadioButton radioButton3;
         private RadioButton radioButton4;
         private RadioButton radioButton5;
+
         public static DateTime TimeRandomized;
 
 
@@ -309,11 +313,11 @@ namespace DR_RTM
             }
             if (TimeSkip.RandomizerStarted == true)
             {
-                label8.Text = $"Current case is: {CurrentlyOn}";
+                label7.Text = $"Current case is: {CurrentlyOn}";
             }
             if (TimeSkip.RandomizerStarted == false)
             {
-                label8.Text = "Current case is: 1-1 has not been triggered yet";
+                label7.Text = "Current case is: 1-1 has not been triggered yet";
             }
         }
 
@@ -391,9 +395,8 @@ namespace DR_RTM
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
-            this.label7 = new System.Windows.Forms.Label();
             this.button3 = new System.Windows.Forms.Button();
-            this.label8 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
             this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.radioButton3 = new System.Windows.Forms.RadioButton();
@@ -536,23 +539,13 @@ namespace DR_RTM
             // 
             this.label6.AutoSize = true;
             this.label6.ForeColor = System.Drawing.Color.White;
-            this.label6.Location = new System.Drawing.Point(43, 258);
+            this.label6.Location = new System.Drawing.Point(6, 258);
             this.label6.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(27, 13);
-            this.label6.TabIndex = 13;
-            this.label6.Text = "N/A";
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.ForeColor = System.Drawing.Color.White;
-            this.label7.Location = new System.Drawing.Point(6, 258);
-            this.label7.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(41, 13);
-            this.label7.TabIndex = 14;
-            this.label7.Text = "Seed =";
+            this.label6.Size = new System.Drawing.Size(41, 13);
+            this.label6.TabIndex = 14;
+            this.label6.Text = "Seed = N/A";
+            this.label6.Click += new System.EventHandler(this.label6_Click);
             // 
             // button3
             // 
@@ -568,16 +561,16 @@ namespace DR_RTM
             this.button3.UseVisualStyleBackColor = false;
             this.button3.Click += new System.EventHandler(this.button3_Click_1);
             // 
-            // label8
+            // label7
             // 
-            this.label8.AutoSize = true;
-            this.label8.ForeColor = System.Drawing.Color.White;
-            this.label8.Location = new System.Drawing.Point(7, 274);
-            this.label8.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(224, 13);
-            this.label8.TabIndex = 16;
-            this.label8.Text = "Current case is: Game must be connected";
+            this.label7.AutoSize = true;
+            this.label7.ForeColor = System.Drawing.Color.White;
+            this.label7.Location = new System.Drawing.Point(7, 274);
+            this.label7.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(224, 13);
+            this.label7.TabIndex = 16;
+            this.label7.Text = "Current case is: Game must be connected";
             // 
             // radioButton1
             // 
@@ -661,9 +654,8 @@ namespace DR_RTM
             this.Controls.Add(this.radioButton3);
             this.Controls.Add(this.radioButton2);
             this.Controls.Add(this.radioButton1);
-            this.Controls.Add(this.label8);
-            this.Controls.Add(this.button3);
             this.Controls.Add(this.label7);
+            this.Controls.Add(this.button3);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.checkBox2);
             this.Controls.Add(this.checkBox1);
@@ -738,20 +730,20 @@ namespace DR_RTM
             TimeSkip.TimeskipOrder.Add(" ");
             TimeSkip.TimeskipOrder.Add(" ");
             TimeSkip.currentSkip = 0;
-            TimeSkip.MaxSkips = TimeSkip.TimeskipOrder.Count;
+            MaxSkips = TimeSkip.TimeskipOrder.Count;
             textBox1.Text = null;
             button3.Text = "Reveal";
-            label6.Text = $"{TimeSkip.Seed}";
+            label6.Text = $"Seed = {TimeSkip.Seed}";
         }
 
         private void button3_Click_1(object sender, EventArgs e)
         {
-            if (TimeSkip.SelectedCategory == "Timeskip" && TimeSkip.includeOvertime == false && TimeSkip.MaxSkips < 17 && TimeRandomized != DateTime.MinValue)
+            if (TimeSkip.SelectedCategory == "Timeskip" && TimeSkip.includeOvertime == false && MaxSkips < 17 && TimeRandomized != DateTime.MinValue)
             {
                 MyMessageBox.Show(TimeSkip.TimeskipOrder.ElementAt(0) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(1) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(2) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(3) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(4) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(5) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(6) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(7) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(8) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(9) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(10) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(11) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(12) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(13) + "\r\n" + "\r\n" + "Randomized: " + TimeRandomized);
                 button3.Text = "Revealed";
             }
-            if (TimeSkip.SelectedCategory == "Timeskip" && TimeSkip.includeOvertime == true && TimeSkip.MaxSkips > 16 && TimeRandomized != DateTime.MinValue)
+            if (TimeSkip.SelectedCategory == "Timeskip" && TimeSkip.includeOvertime == true && MaxSkips > 16 && TimeRandomized != DateTime.MinValue)
             {
                 MyMessageBox.Show(TimeSkip.TimeskipOrder.ElementAt(0) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(1) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(2) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(3) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(4) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(5) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(6) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(7) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(8) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(9) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(10) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(11) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(12) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(13) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(14) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(15) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(16) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(17) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(18) + "\r\n" + "\r\n" + "Randomized: " + TimeRandomized);
                 button3.Text = "Revealed";
@@ -814,6 +806,10 @@ namespace DR_RTM
         private void radioButton5_CheckedChanged(object sender, EventArgs e)
         {
             TimeSkip.SelectedCategory = "All Scoops";
+        }
+        private void label6_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText($"{TimeSkip.Seed}");
         }
     }
 }
