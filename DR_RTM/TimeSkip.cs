@@ -586,7 +586,7 @@ namespace DR_RTM
                 {
                     startCutscene = false;
                 }
-                if (cutsceneID == 9 && TimeskipOrder.ElementAt(currentSkip) != "An Odd Old Man" && cGametask == 3)
+                if (cutsceneID == 9 && TimeskipOrder.ElementAt(currentSkip) != "Backup For Brad" && cGametask == 3)
                 {
                     startCutscene = true;
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 10);
@@ -1370,21 +1370,21 @@ namespace DR_RTM
                 {
                     startCutscene = false;
                 }
-                if (cutsceneID == 9 && TimeskipOrder.ElementAt(currentSkip) == "An Odd Old Man" && cGametask == 3)
+                if (cutsceneID == 9 && TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && cGametask == 3)
                 {
                     startCutscene = true;
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 10);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
                 }
-                if (cutsceneID == 44 && TimeskipOrder.ElementAt(currentSkip) == "The Butcher" && cGametask == 3)
+                if (cutsceneID == 44 && TimeskipOrder.ElementAt(currentSkip) != "The Butcher" && cGametask == 3)
                 {
                     startCutscene = true;
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 45);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
                 }
-                if (cutsceneID == 26 && TimeskipOrder.ElementAt(currentSkip) == "A Promise To Isabella" && cGametask == 3)
+                if (cutsceneID == 26 && TimeskipOrder.ElementAt(currentSkip) != "Girl Hunting" && cGametask == 3)
                 {
                     startCutscene = true;
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 27);
