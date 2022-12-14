@@ -1073,14 +1073,32 @@ namespace DR_RTM
                         gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 50);
                         gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     }
-                    if (gameTime > 4535999)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 4212000u);
-                    }
                 }
-                /// Writes to memory what's required to make that boss spawn or play the ending cutscene
+                if (gameTime > 4535999)
+                {
+                    gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 4212000u);
+                }
+                if (cGametask == 3)
+                {
+                    startCutscene = false;
+                }
                 if (RandomizerStarted == true)
                 {
+                    /// Goes to the next boss in the list
+                    if (TimeskipOrder.ElementAt(currentSkip) == "Convicts" && Convicts1 == 0 && Convicts2 == 0 && Convicts3 == 0 && cGametask == 3 && loadingRoomId == 1792)
+                    {
+                        currentSkip = currentSkip + 1;
+                    }
+                    if (TimeskipOrder.ElementAt(currentSkip) == "Snipers" && Snipers1 == 0 && Snipers2 == 0 && Snipers3 == 0 && cGametask == 3 && loadingRoomId == 256)
+                    {
+                        currentSkip = currentSkip + 1;
+                    }
+                    if (cGametask == 7 && startCutscene == false && CutscenesToSkipOn.Contains(cutsceneID))
+                    {
+                        startCutscene = true;
+                        currentSkip = currentSkip + 1;
+                    }
+                    /// Writes to memory what's required to make that boss spawn or play the ending cutscene
                     if (TimeskipOrder.ElementAt(currentSkip) == " ")
                     {
                         gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134789), 1);
@@ -1120,10 +1138,6 @@ namespace DR_RTM
                     if (TimeskipOrder.ElementAt(currentSkip) == "Snipers" && loadingRoomId != 1024)
                     {
                         gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134845), 77);
-                    }
-                    if (cGametask == 3)
-                    {
-                        startCutscene = false;
                     }
                     /// Write to memory to make bosses that shouldn't be active not be active
                     if (TimeskipOrder.ElementAt(currentSkip) != "Cletus" || TimeskipOrder.ElementAt(currentSkip) != "Snipers")
@@ -1182,20 +1196,6 @@ namespace DR_RTM
                     if (TimeskipOrder.ElementAt(currentSkip) == "Convicts" && RandomizerStarted == true)
                     {
                         gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777983);
-                    }
-                    /// Goes to the next boss in the list
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Convicts" && Convicts1 == 0 && Convicts2 == 0 && Convicts3 == 0 && cGametask == 3 && loadingRoomId == 1792)
-                    {
-                        currentSkip = currentSkip + 1;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Snipers" && Snipers1 == 0 && Snipers2 == 0 && Snipers3 == 0 && cGametask == 3 && loadingRoomId == 256)
-                    {
-                        currentSkip = currentSkip + 1;
-                    }
-                    if (cGametask == 7 && startCutscene == false && CutscenesToSkipOn.Contains(cutsceneID))
-                    {
-                        startCutscene = true;
-                        currentSkip = currentSkip + 1;
                     }
                 }
             }
@@ -1344,7 +1344,7 @@ namespace DR_RTM
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 42);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                 }
-                    if (cutsceneID == 42 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "Jessie's Discovery" && cutsceneID != 84 && cutsceneID != 87)
+                if (cutsceneID == 42 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "Jessie's Discovery" && cutsceneID != 84 && cutsceneID != 87)
                 {
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), LastCutsceneSkip);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
@@ -2055,6 +2055,12 @@ namespace DR_RTM
                     gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 144);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     LastCutsceneSkip = 144;
+                }
+                if (TimeskipOrder.ElementAt(currentSkip) == " " && cGametask == 3 && cutsceneID != 144)
+                {
+                    gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 134);
+                    gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
+                    gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
                 }
                 /// Force Bosses to spawn
                 if (TimeskipOrder.ElementAt(currentSkip) == "Kent 3" && RandomizerStarted == true)
