@@ -446,8 +446,6 @@ namespace DR_RTM
             this.timeDisplay.Size = new System.Drawing.Size(53, 13);
             this.timeDisplay.TabIndex = 5;
             this.timeDisplay.Text = "<missing>";
-            this.timeDisplay.Click += new System.EventHandler(this.timeDisplay_Click);
-            this.timeDisplay.MouseClick += new System.Windows.Forms.MouseEventHandler(this.timeDisplay_MouseClick);
             // 
             // label3
             // 
@@ -458,7 +456,6 @@ namespace DR_RTM
             this.label3.Size = new System.Drawing.Size(147, 13);
             this.label3.TabIndex = 6;
             this.label3.Text = "Leave empty for random seed";
-            this.label3.Click += new System.EventHandler(this.label3_Click);
             // 
             // textBox1
             // 
@@ -698,27 +695,11 @@ namespace DR_RTM
             e.Handled = !(Char.IsNumber(e.KeyChar) || e.KeyChar == 3 || e.KeyChar == 8 || e.KeyChar == 22);
         }
 
-        private void label3_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void timeDisplay_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void timeDisplay_MouseClick(object sender, MouseEventArgs e)
-        {
-
-        }
-
         private void button2_Click_1(object sender, EventArgs e)
         {
             TimeRandomized = DateTime.UtcNow;
             TimeSkip.OnlyTriggerOnce = false;
             TimeSkip.CreateList();
-            TimeSkip.CutsceneList();
             TimeSkip.carlitoHideoutFlag = false;
             TimeSkip.RandomizerStarted = false;
             TimeSkip.FactsTriggered = false;

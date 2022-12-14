@@ -101,8 +101,6 @@ namespace DR_RTM
 
         private static bool inCutsceneOrLoad;
 
-        public static string PreviousCase;
-
         private static int loadingRoomId;
 
         private static uint PPRewards;
@@ -196,6 +194,7 @@ namespace DR_RTM
             if (SelectedCategory == "Timeskip")
             {
                 TimeskipOrder.Clear();
+                CutscenesToSkipOn.Clear();
                 TimeskipOrder.Add("Backup For Brad");
                 TimeskipOrder.Add("An Odd Old Man");
                 TimeskipOrder.Add("A Temporary Agreement");
@@ -210,6 +209,21 @@ namespace DR_RTM
                 TimeskipOrder.Add("Jessie's Discovery");
                 TimeskipOrder.Add("The Butcher");
                 TimeskipOrder.Add("Memories");
+                CutscenesToSkipOn.Add(8);
+                CutscenesToSkipOn.Add(10);
+                CutscenesToSkipOn.Add(12);
+                CutscenesToSkipOn.Add(13);
+                CutscenesToSkipOn.Add(17);
+                CutscenesToSkipOn.Add(24);
+                CutscenesToSkipOn.Add(27);
+                CutscenesToSkipOn.Add(31);
+                CutscenesToSkipOn.Add(33);
+                CutscenesToSkipOn.Add(39);
+                CutscenesToSkipOn.Add(41);
+                CutscenesToSkipOn.Add(42);
+                CutscenesToSkipOn.Add(43);
+                CutscenesToSkipOn.Add(45);
+                CutscenesToSkipOn.Add(47);
                 if (includeOvertime == true)
                 {
                     TimeskipOrder.Add("Supplies");
@@ -217,11 +231,17 @@ namespace DR_RTM
                     TimeskipOrder.Add("Tunnels");
                     TimeskipOrder.Add("Tank");
                     TimeskipOrder.Add("Brock");
+                    CutscenesToSkipOn.Add(135);
+                    CutscenesToSkipOn.Add(132);
+                    CutscenesToSkipOn.Add(126);
+                    CutscenesToSkipOn.Add(136);
+                    CutscenesToSkipOn.Add(144);
                 }
             }
             else if (SelectedCategory == "Psychoskip")
             {
                 TimeskipOrder.Clear();
+                CutscenesToSkipOn.Clear();
                 TimeskipOrder.Add("Convicts");
                 TimeskipOrder.Add("Cliff");
                 TimeskipOrder.Add("Cletus");
@@ -231,10 +251,19 @@ namespace DR_RTM
                 TimeskipOrder.Add("Sean");
                 TimeskipOrder.Add("Paul");
                 TimeskipOrder.Add("Kent 3");
+                CutscenesToSkipOn.Add(70);
+                CutscenesToSkipOn.Add(71);
+                CutscenesToSkipOn.Add(72);
+                CutscenesToSkipOn.Add(73);
+                CutscenesToSkipOn.Add(74);
+                CutscenesToSkipOn.Add(75);
+                CutscenesToSkipOn.Add(76);
+                CutscenesToSkipOn.Add(77);
             }
             else if (SelectedCategory == "All Bosses")
             {
                 TimeskipOrder.Clear();
+                CutscenesToSkipOn.Clear();
                 TimeskipOrder.Add("Backup For Brad");
                 TimeskipOrder.Add("An Odd Old Man");
                 TimeskipOrder.Add("A Temporary Agreement");
@@ -263,62 +292,6 @@ namespace DR_RTM
                 TimeskipOrder.Add("Tunnels");
                 TimeskipOrder.Add("Tank");
                 TimeskipOrder.Add("Brock");
-            }
-        }
-        public static void CutsceneList()
-        {
-            if (SelectedCategory == "Timeskip")
-            {
-                CutscenesToSkipOn.Clear();
-                CutscenesToSkipOn.Add(8);
-                CutscenesToSkipOn.Add(10);
-                CutscenesToSkipOn.Add(12);
-                CutscenesToSkipOn.Add(13);
-                CutscenesToSkipOn.Add(17);
-                CutscenesToSkipOn.Add(24);
-                CutscenesToSkipOn.Add(27);
-                CutscenesToSkipOn.Add(31);
-                CutscenesToSkipOn.Add(33);
-                CutscenesToSkipOn.Add(39);
-                CutscenesToSkipOn.Add(41);
-                CutscenesToSkipOn.Add(42);
-                CutscenesToSkipOn.Add(43);
-                CutscenesToSkipOn.Add(45);
-                CutscenesToSkipOn.Add(47);
-                if (includeOvertime == true)
-                {
-                    CutscenesToSkipOn.Add(135);
-                    CutscenesToSkipOn.Add(132);
-                    CutscenesToSkipOn.Add(126);
-                    CutscenesToSkipOn.Add(136);
-                    CutscenesToSkipOn.Add(144);
-                }
-                if (Form1.spawnEnemies == true)
-                {
-                    CutscenesToSkipOn.Remove(8);
-                    CutscenesToSkipOn.Add(50);
-                }
-            }
-            else if (SelectedCategory == "Psychoskip")
-            {
-                CutscenesToSkipOn.Clear();
-                CutscenesToSkipOn.Add(70);
-                CutscenesToSkipOn.Add(71);
-                CutscenesToSkipOn.Add(72);
-                CutscenesToSkipOn.Add(73);
-                CutscenesToSkipOn.Add(74);
-                CutscenesToSkipOn.Add(75);
-                CutscenesToSkipOn.Add(76);
-                CutscenesToSkipOn.Add(77);
-                if (Form1.spawnEnemies == true)
-                {
-                    CutscenesToSkipOn.Remove(8);
-                    CutscenesToSkipOn.Add(50);
-                }
-            }
-            else if (SelectedCategory == "All Bosses")
-            {
-                CutscenesToSkipOn.Clear();
                 CutscenesToSkipOn.Add(8);
                 CutscenesToSkipOn.Add(10);
                 CutscenesToSkipOn.Add(12);
@@ -347,19 +320,11 @@ namespace DR_RTM
                 CutscenesToSkipOn.Add(126);
                 CutscenesToSkipOn.Add(136);
                 CutscenesToSkipOn.Add(144);
-                if (Form1.spawnEnemies == true)
-                {
-                    CutscenesToSkipOn.Remove(8);
-                    CutscenesToSkipOn.Add(50);
-                }
             }
-            else if (SelectedCategory == "All Survivors")
+            if (Form1.spawnEnemies == true)
             {
-                CutscenesToSkipOn.Clear();
-            }
-            else if (SelectedCategory == "All Scoops")
-            {
-                CutscenesToSkipOn.Clear();
+                CutscenesToSkipOn.Remove(8);
+                CutscenesToSkipOn.Add(50);
             }
         }
 
@@ -596,7 +561,10 @@ namespace DR_RTM
                 if (cutsceneID == 50)
                 {
                     gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
-                    startCutscene = false;
+                }
+                if (gameTime > 10367999 && TimeskipOrder.ElementAt(currentSkip) != " " && !TunnelsMissions.Contains(TimeskipOrder.ElementAt(currentSkip)))
+                {
+                    gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
                 }
                 if (cutsceneID == 17 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "Medicine Run")
                 {
@@ -1377,7 +1345,10 @@ namespace DR_RTM
                 if (cutsceneID == 50)
                 {
                     gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
-                    startCutscene = false;
+                }
+                if (gameTime > 10367999 && TimeskipOrder.ElementAt(currentSkip) != " " && !TunnelsMissions.Contains(TimeskipOrder.ElementAt(currentSkip)))
+                {
+                    gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
                 }
                 if (cutsceneID == 17 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "Medicine Run")
                 {
