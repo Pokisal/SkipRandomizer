@@ -742,13 +742,15 @@ namespace DR_RTM
         }
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
-            if (checkBox1.Checked)
+            if (checkBox1.Checked && TimeSkip.RandomizerStarted == false)
             {
                 spawnEnemies = true;
+                TimeSkip.CreateList();
             }
-            else
+            else if (!checkBox1.Checked && TimeSkip.RandomizerStarted == false)
             {
                 spawnEnemies = false;
+                TimeSkip.CreateList();
             }
         }
 
