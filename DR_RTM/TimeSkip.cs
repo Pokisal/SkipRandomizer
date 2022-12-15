@@ -191,6 +191,14 @@ namespace DR_RTM
         {
             Shuffle(TimeskipOrder, Seed);
         }
+
+        public static void RestoreCode()
+        {
+            gameMemory.WriteUInt(IntPtr.Add(DeadRisingPtr, 3171914), 26774409);
+            gameMemory.WriteUInt(IntPtr.Add(DeadRisingPtr, 3173063), 26774409);
+            gameMemory.WriteUInt(IntPtr.Add(DeadRisingPtr, 3173444), 26774409);
+            gameMemory.WriteUInt(IntPtr.Add(DeadRisingPtr, 3187063), 26774409);
+        }
         public static void CreateList()
         {
             if (SelectedCategory == "Timeskip")
