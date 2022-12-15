@@ -707,7 +707,6 @@ namespace DR_RTM
                 TimeSkip.SeedRandomizer();
             }
             TimeSkip.Randomize();
-            TimeSkip.TimeskipOrder.Insert(0, "Tunnels");
             TimeSkip.TimeskipOrder.Add(" ");
             TimeSkip.TimeskipOrder.Add(" ");
             TimeSkip.currentSkip = 0;
