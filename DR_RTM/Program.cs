@@ -16,6 +16,12 @@ namespace DR_RTM
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(defaultValue: false);
 			Application.Run(new Form1());
-        }
+			AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
+			static void OnProcessExit(object sender, EventArgs e)
+            {
+				TimeSkip.RestoreCode();
+            }
+
+		}
     }
 }

@@ -324,7 +324,6 @@ namespace DR_RTM
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             TimeSkip.UpdateTimer.Enabled = false;
-            TimeSkip.RestoreCode();
         }
 
         private void Form1_Load(object sender, EventArgs e)
