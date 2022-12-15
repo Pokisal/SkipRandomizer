@@ -528,7 +528,7 @@ namespace DR_RTM
             this.checkBox2.Name = "checkBox2";
             this.checkBox2.Size = new System.Drawing.Size(196, 17);
             this.checkBox2.TabIndex = 12;
-            this.checkBox2.Text = "Add Overtime to Timeskip? (Broken)";
+            this.checkBox2.Text = "Add Overtime to Timeskip?";
             this.checkBox2.UseVisualStyleBackColor = false;
             this.checkBox2.CheckedChanged += new System.EventHandler(this.checkBox2_CheckedChanged);
             // 
@@ -606,7 +606,7 @@ namespace DR_RTM
             this.radioButton3.Size = new System.Drawing.Size(100, 17);
             this.radioButton3.TabIndex = 19;
             this.radioButton3.TabStop = true;
-            this.radioButton3.Text = "AllBosses";
+            this.radioButton3.Text = "All Bosses";
             this.radioButton3.UseVisualStyleBackColor = true;
             this.radioButton3.CheckedChanged += new System.EventHandler(this.radioButton3_CheckedChanged);
             this.radioButton3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
@@ -700,7 +700,6 @@ namespace DR_RTM
             TimeRandomized = DateTime.UtcNow;
             TimeSkip.OnlyTriggerOnce = false;
             TimeSkip.CreateList();
-            TimeSkip.carlitoHideoutFlag = false;
             TimeSkip.RandomizerStarted = false;
             TimeSkip.FactsTriggered = false;
             if (textBox1.Text == "")
@@ -708,6 +707,7 @@ namespace DR_RTM
                 TimeSkip.SeedRandomizer();
             }
             TimeSkip.Randomize();
+            TimeSkip.TimeskipOrder.Insert(0, "Tunnels");
             TimeSkip.TimeskipOrder.Add(" ");
             TimeSkip.TimeskipOrder.Add(" ");
             TimeSkip.currentSkip = 0;
