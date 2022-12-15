@@ -419,7 +419,7 @@ namespace DR_RTM
                 gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                 gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
             }
-            if (cGametask == 3 && cutsceneOnLoad == 0 && cutsceneID == LastCutsceneSkip && RandomizerStarted)
+            if (cGametask == 3 && cutsceneOnLoad == 0 && cutsceneID == LastCutsceneSkip && RandomizerStarted == true)
             {
                 gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
             }
