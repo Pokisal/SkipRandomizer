@@ -708,8 +708,8 @@ namespace DR_RTM
             }
             TimeSkip.Randomize();
             /// Remove comment and add Timeskips you wish to test in the quotation marks.
-            TimeSkip.TimeskipOrder.Insert(0, " ");
-            TimeSkip.TimeskipOrder.Insert(1, " ");
+            /// TimeSkip.TimeskipOrder.Insert(0, "");
+            /// TimeSkip.TimeskipOrder.Insert(1, "");
             TimeSkip.TimeskipOrder.Add(" ");
             TimeSkip.TimeskipOrder.Add(" ");
             TimeSkip.currentSkip = 0;
