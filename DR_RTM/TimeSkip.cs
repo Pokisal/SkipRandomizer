@@ -1125,16 +1125,16 @@ namespace DR_RTM
                         gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     }
                 }
-                if (gameTime > 4535999)
-                {
-                    gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 4212000u);
-                }
-                if (cGametask == 3)
-                {
-                    startCutscene = false;
-                }
                 if (RandomizerStarted == true)
                 {
+                    if (gameTime > 4535999)
+                    {
+                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 4212000u);
+                    }
+                    if (cGametask == 3)
+                    {
+                        startCutscene = false;
+                    }
                     /// Goes to the next boss in the list
                     if (TimeskipOrder.ElementAt(currentSkip) == "Convicts" && Convicts1 == 0 && Convicts2 == 0 && Convicts3 == 0 && cGametask == 3 && loadingRoomId == 1792)
                     {
@@ -1191,26 +1191,6 @@ namespace DR_RTM
                         gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134845), 77);
                     }
                     /// Write to memory to make bosses that shouldn't be active not be active
-                    if (TimeskipOrder.ElementAt(currentSkip) != "Cletus" || TimeskipOrder.ElementAt(currentSkip) != "Snipers")
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134845), 32);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Snipers" && loadingRoomId == 1281)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134845), 32);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) != "Adam" || TimeskipOrder.ElementAt(currentSkip) != "Jo" || TimeskipOrder.ElementAt(currentSkip) != "Paul")
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134842), 16);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) != "Kent 3" || TimeskipOrder.ElementAt(currentSkip) != "Sean" || TimeskipOrder.ElementAt(currentSkip) != "Cliff")
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841), 0);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Sean" && loadingRoomId == 1024 || TimeskipOrder.ElementAt(currentSkip) == "Sean" && loadingRoomId == 1281)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841), 0);
-                    }
                     /// Writes to the watch the current boss you're on
                     if (TimeskipOrder.ElementAt(currentSkip) == "Kent 3" && RandomizerStarted == true && cutsceneID != 113)
                     {
@@ -2398,6 +2378,6 @@ namespace DR_RTM
                     gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777983);
                 }
             }
+            }
         }
     }
-}
