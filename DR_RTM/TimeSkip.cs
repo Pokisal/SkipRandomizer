@@ -469,8 +469,9 @@ namespace DR_RTM
                 {
                     gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 11448000u);
                 }
-                if (campaignProgress == 420 && loadingRoomId == 288 && old.inCutsceneOrLoad && !inCutsceneOrLoad && TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == false)
+                if (campaignProgress == 420 && loadingRoomId == 288 && old.inCutsceneOrLoad && !inCutsceneOrLoad && TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == false && OnlyTriggerOnce == false)
                 {
+                    OnlyTriggerOnce = true;
                     gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 69);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
@@ -630,7 +631,7 @@ namespace DR_RTM
                 if (cutsceneID == 9 && TimeskipOrder.ElementAt(currentSkip) != "Backup For Brad" && cGametask == 3)
                 {
                     startCutscene = true;
-                    OnlyTriggerOnce = true;
+                    CurrentSkipOnce = true;
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 10);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
@@ -638,7 +639,7 @@ namespace DR_RTM
                 if (cutsceneID == 44 && TimeskipOrder.ElementAt(currentSkip) != "The Butcher" && cGametask == 3)
                 {
                     startCutscene = true;
-                    OnlyTriggerOnce = true;
+                    CurrentSkipOnce = true;
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 45);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
@@ -646,7 +647,7 @@ namespace DR_RTM
                 if (cutsceneID == 26 && TimeskipOrder.ElementAt(currentSkip) != "Girl Hunting" && cGametask == 3)
                 {
                     startCutscene = true;
-                    OnlyTriggerOnce = true;
+                    CurrentSkipOnce = true;
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 27);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
@@ -654,7 +655,7 @@ namespace DR_RTM
                 if (cutsceneID == 21 && TimeskipOrder.ElementAt(currentSkip) != "Medicine Run" && cGametask == 3)
                 {
                     startCutscene = true;
-                    OnlyTriggerOnce = true;
+                    CurrentSkipOnce = true;
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 22);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
@@ -1074,13 +1075,15 @@ namespace DR_RTM
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     LastCutsceneSkip = 144;
                 }
-                if (TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == false && cGametask == 7)
+                if (TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == false && cGametask == 7 && OnlyTriggerOnce == false)
                 {
+                    OnlyTriggerOnce = true;
                     gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 52);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                 }
-                if (TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == true && cGametask == 7)
+                if (TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == true && cGametask == 7 && OnlyTriggerOnce == false)
                 {
+                    OnlyTriggerOnce = true;
                     gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 134);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                 }
@@ -1436,7 +1439,7 @@ namespace DR_RTM
                 if (cutsceneID == 9 && TimeskipOrder.ElementAt(currentSkip) != "Backup For Brad" && cGametask == 3)
                 {
                     startCutscene = true;
-                    OnlyTriggerOnce = true;
+                    CurrentSkipOnce = true;
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 10);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
@@ -1444,7 +1447,7 @@ namespace DR_RTM
                 if (cutsceneID == 44 && TimeskipOrder.ElementAt(currentSkip) != "The Butcher" && cGametask == 3)
                 {
                     startCutscene = true;
-                    OnlyTriggerOnce = true;
+                    CurrentSkipOnce = true;
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 45);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
@@ -1452,7 +1455,7 @@ namespace DR_RTM
                 if (cutsceneID == 26 && TimeskipOrder.ElementAt(currentSkip) != "Girl Hunting" && cGametask == 3)
                 {
                     startCutscene = true;
-                    OnlyTriggerOnce = true;
+                    CurrentSkipOnce = true;
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 27);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
@@ -1460,7 +1463,7 @@ namespace DR_RTM
                 if (cutsceneID == 21 && TimeskipOrder.ElementAt(currentSkip) != "Medicine Run" && cGametask == 3)
                 {
                     startCutscene = true;
-                    OnlyTriggerOnce = true;
+                    CurrentSkipOnce = true;
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 22);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
@@ -2128,8 +2131,9 @@ namespace DR_RTM
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     LastCutsceneSkip = 144;
                 }
-                if (TimeskipOrder.ElementAt(currentSkip) == " " && cGametask == 3 && cutsceneID != 144)
+                if (TimeskipOrder.ElementAt(currentSkip) == " " && cGametask == 3 && cutsceneID != 144 && OnlyTriggerOnce == false)
                 {
+                    OnlyTriggerOnce = true;
                     gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 134);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
