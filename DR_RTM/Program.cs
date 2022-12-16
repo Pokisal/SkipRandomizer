@@ -19,9 +19,11 @@ namespace DR_RTM
 			AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
 			static void OnProcessExit(object sender, EventArgs e)
             {
-				TimeSkip.RestoreCode();
+				if (TimeSkip.UpdateTimer.Enabled == true)
+				{
+					TimeSkip.RestoreCode();
+				}
             }
-
 		}
     }
 }

@@ -431,10 +431,19 @@ namespace DR_RTM
             {
                 gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
             }
+            if (cutsceneID == 48 && TimeskipOrder.ElementAt(currentSkip) == "Bomb Collector")
+            {
+                gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
+                gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 37);
+                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
+                gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), 0);
+            }
             if (SelectedCategory == "Timeskip" && Form1.TimeRandomized != DateTime.MinValue)
             {
                 if (campaignProgress == 400 && inCutsceneOrLoad)
                 {
+                    CurrentSkipOnce = true;
+                    startCutscene = true;
                     gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 10260000u);
                 }
                 if (campaignProgress == 400 && old.inCutsceneOrLoad && !inCutsceneOrLoad)
@@ -457,7 +466,7 @@ namespace DR_RTM
                 {
                     gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 10368001u);
                 }
-                if (campaignProgress == 406 || campaignProgress == 410 || campaignProgress == 415 && TimeskipOrder.Count == 0)
+                if (campaignProgress == 406 || campaignProgress == 410 || campaignProgress == 415)
                 {
                     gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), gameMemory.ReadUInt(IntPtr.Add(gameTimePtr, 408)) + 1);
                 }
@@ -472,10 +481,7 @@ namespace DR_RTM
                 if (campaignProgress == 420 && loadingRoomId == 288 && old.inCutsceneOrLoad && !inCutsceneOrLoad && TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == false && OnlyTriggerOnce == false)
                 {
                     OnlyTriggerOnce = true;
-                    gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 69);
-                    gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                    gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 11664501u);
+                    gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 12000000u);
                 }
                 /// General stuff
                 if (cutsceneID == 8 && cGametask == 7)
@@ -509,7 +515,7 @@ namespace DR_RTM
                 }
                 if (currentSkip != 0)
                 {
-                    if (cutsceneID == 42 && TimeskipOrder.ElementAt(currentSkip) != "Jessie's Discovery" && TimeskipOrder.ElementAt(currentSkip - 1) != "Hideout")
+                    if (cutsceneID == 42 && TimeskipOrder.ElementAt(currentSkip) != "Jessie's Discovery" && TimeskipOrder.ElementAt(currentSkip) != "Hideout" && TimeskipOrder.ElementAt(currentSkip) != "Memories")
                     {
                         startCutscene = false;
                         OnlyTriggerOnce = false;
@@ -570,6 +576,12 @@ namespace DR_RTM
                 {
                     gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134788), 24);
                 }
+                if (cutsceneID == 48 && OnlyTriggerOnce == false && cGametask == 7)
+                {
+                    OnlyTriggerOnce = true;
+                    gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), LastCutsceneSkip);
+                    gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
+                }
                 if (TimeskipOrder.ElementAt(currentSkip) == "Supplies" && cutsceneID == 42 && OnlyTriggerOnce2 == false && cGametask == 7)
                 {
                     OnlyTriggerOnce2 = true;
@@ -619,6 +631,19 @@ namespace DR_RTM
                 if (cutsceneID == 43 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "The Butcher")
                 {
                     startCutscene = false;
+                }
+                if (cutsceneID == 47 && OnlyTriggerOnce == false && cGametask == 4)
+                {
+                    startCutscene = false;
+                    CurrentSkipOnce = false;
+                    OnlyTriggerOnce = true;
+                }
+                if (cutsceneID == 42 && TimeskipOrder.ElementAt(currentSkip) == "Memories")
+                {
+                    startCutscene = true;
+                    CurrentSkipOnce = true;
+                    gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 46);
+                    gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                 }
                 if (TimeskipOrder.ElementAt(currentSkip) == "Supplies" && RandomizerStarted == true)
                 {
@@ -848,7 +873,7 @@ namespace DR_RTM
                 {
                     gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 370);
                 }
-                if (TimeskipOrder.ElementAt(currentSkip) == "Memories" && cGametask == 3 && RandomizerStarted == true && cutsceneID != 46)
+                if (TimeskipOrder.ElementAt(currentSkip) == "Memories" && cGametask == 3 && RandomizerStarted == true && loadingRoomId != 1025)
                 {
                     gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 390);
                 }
@@ -1075,7 +1100,7 @@ namespace DR_RTM
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     LastCutsceneSkip = 144;
                 }
-                if (TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == false && cGametask == 7 && OnlyTriggerOnce == false)
+                if (TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == false && cGametask == 7 && OnlyTriggerOnce == false && cutsceneID != 69)
                 {
                     OnlyTriggerOnce = true;
                     gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 52);
@@ -1411,6 +1436,19 @@ namespace DR_RTM
                 if (cutsceneID == 50)
                 {
                     gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
+                }
+                if (cutsceneID == 47 && OnlyTriggerOnce == false && cGametask == 4)
+                {
+                    startCutscene = false;
+                    CurrentSkipOnce = false;
+                    OnlyTriggerOnce = true;
+                }
+                if (cutsceneID == 42 && TimeskipOrder.ElementAt(currentSkip) == "Memories")
+                {
+                    startCutscene = true;
+                    CurrentSkipOnce = true;
+                    gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 46);
+                    gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                 }
                 if (gameTime > 10367999 && TimeskipOrder.ElementAt(currentSkip) != " " && !TunnelsMissions.Contains(TimeskipOrder.ElementAt(currentSkip)))
                 {
@@ -2249,7 +2287,7 @@ namespace DR_RTM
                 {
                     gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 370);
                 }
-                if (TimeskipOrder.ElementAt(currentSkip) == "Memories" && cGametask == 3 && RandomizerStarted == true && cutsceneID != 46)
+                if (TimeskipOrder.ElementAt(currentSkip) == "Memories" && cGametask == 3 && RandomizerStarted == true && loadingRoomId != 1025)
                 {
                     gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 390);
                 }
