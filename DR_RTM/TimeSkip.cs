@@ -2193,27 +2193,6 @@ namespace DR_RTM
                 {
                     gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134845), 77);
                 }
-                /// Write to memory to make bosses that shouldn't be active not be active
-                if (TimeskipOrder.ElementAt(currentSkip) != "Cletus" && TimeskipOrder.ElementAt(currentSkip) != "Snipers")
-                {
-                    gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134845), 32);
-                }
-                if (TimeskipOrder.ElementAt(currentSkip) == "Snipers" && loadingRoomId == 1281)
-                {
-                    gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134845), 32);
-                }
-                if (TimeskipOrder.ElementAt(currentSkip) != "Adam" && TimeskipOrder.ElementAt(currentSkip) != "Jo" && TimeskipOrder.ElementAt(currentSkip) != "Paul")
-                {
-                    gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134842), 16);
-                }
-                if (TimeskipOrder.ElementAt(currentSkip) != "Kent 3" && TimeskipOrder.ElementAt(currentSkip) != "Sean" && TimeskipOrder.ElementAt(currentSkip) != "Cliff")
-                {
-                    gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841), 0);
-                }
-                if (TimeskipOrder.ElementAt(currentSkip) == "Sean" && loadingRoomId == 1024 || TimeskipOrder.ElementAt(currentSkip) == "Sean" && loadingRoomId == 1281)
-                {
-                    gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841), 0);
-                }
                 /// Writes campaign progress to make sure certain bosses aren't killed early and so the game doesn't overwrite it itself and softlock the player
                 if (TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && cGametask == 3 && cutsceneID != 9 && RandomizerStarted == true)
                 {
