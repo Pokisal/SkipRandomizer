@@ -1190,7 +1190,6 @@ namespace DR_RTM
                     {
                         gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134845), 77);
                     }
-                    /// Write to memory to make bosses that shouldn't be active not be active
                     /// Writes to the watch the current boss you're on
                     if (TimeskipOrder.ElementAt(currentSkip) == "Kent 3" && RandomizerStarted == true && cutsceneID != 113)
                     {
