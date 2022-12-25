@@ -1169,6 +1169,7 @@ namespace DR_RTM
                     if (TimeskipOrder.ElementAt(currentSkip) == "Adam")
                     {
                         gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134842), 17);
+                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 135082), 128);
                     }
                     if (TimeskipOrder.ElementAt(currentSkip) == "Jo")
                     {
@@ -2171,6 +2172,7 @@ namespace DR_RTM
                 if (TimeskipOrder.ElementAt(currentSkip) == "Adam" && RandomizerStarted == true)
                 {
                     gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134842), 17);
+                    gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 135082), 128);
                 }
                 if (TimeskipOrder.ElementAt(currentSkip) == "Jo" && RandomizerStarted == true)
                 {
