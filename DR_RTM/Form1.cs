@@ -514,7 +514,7 @@ namespace DR_RTM
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Size = new System.Drawing.Size(228, 17);
             this.checkBox1.TabIndex = 11;
-            this.checkBox1.Text = "Click to have Special Forces always active";
+            this.checkBox1.Text = "Click to have Special Forces/Cultists active";
             this.checkBox1.UseVisualStyleBackColor = false;
             this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
             // 

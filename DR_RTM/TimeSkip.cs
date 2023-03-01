@@ -951,6 +951,7 @@ namespace DR_RTM
                 }
                 if (cutsceneID == 8 && Form1.spawnEnemies == true)
                 {
+                    gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134845), 60);
                     gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 50);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                 }
@@ -1121,6 +1122,7 @@ namespace DR_RTM
                     RandomizerStarted = true;
                     if (Form1.spawnEnemies == true)
                     {
+                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134845), 60);
                         gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 50);
                         gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     }
@@ -1639,6 +1641,7 @@ namespace DR_RTM
                 }
                 if (cutsceneID == 8 && Form1.spawnEnemies == true)
                 {
+                    gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134845), 60);
                     gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 50);
                     gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                 }
