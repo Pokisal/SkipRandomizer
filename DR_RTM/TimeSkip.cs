@@ -61,7 +61,7 @@ namespace DR_RTM
 
         private static IntPtr TeleportPtr;
 
-        public static string SelectedCategory;
+        public static string SelectedCategory = "Timeskip";
 
         private const int gameTimeOffset = 408;
 
