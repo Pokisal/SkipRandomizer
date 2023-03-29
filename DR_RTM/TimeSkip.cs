@@ -421,6 +421,21 @@ namespace DR_RTM
             {
                 RandomizerStarted = false;
             }
+            if (cutsceneID == 8 && cGametask == 7 && startCutscene == false)
+            {
+                if (Form1.spawnEnemies == 1 || Form1.spawnEnemies == 3)
+                {
+                    gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134782), 32);
+                }
+                if (Form1.spawnEnemies == 2 || Form1.spawnEnemies == 3)
+                {
+                    gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134784), 64);
+                    if (CletusActive < 60)
+                    {
+                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134845), 60);
+                    }
+                }
+            }
             if (TimeskipOrder.ElementAt(currentSkip) == "Tunnels" && JeepActivated == 129 && OnlyTriggerOnce == false && cutsceneID != 144 && loadingRoomId == 2818)
             {
                 OnlyTriggerOnce = true;
@@ -949,12 +964,6 @@ namespace DR_RTM
                         CurrentSkipOnce = true;
                         currentSkip = currentSkip + 1;
                     }
-                    if (cutsceneID == 8 && Form1.spawnEnemies == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134782), 32);
-                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134784), 64);
-                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134845), 60);
-                    }
                     if (TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 8)
                     {
                         startCutscene = true;
@@ -1118,15 +1127,9 @@ namespace DR_RTM
             else if (SelectedCategory == "Psychoskip" && Form1.TimeRandomized != DateTime.MinValue)
             {
                 /// General stuff
-                if (cutsceneID == 8 && cGametask == 7 && OnlyTriggerOnce == false)
+                if (cutsceneID == 8 && cGametask == 7 && RandomizerStarted == false)
                 {
                     RandomizerStarted = true;
-                    if (Form1.spawnEnemies == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134782), 32);
-                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134784), 64);
-                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134845), 60);
-                    }
                     OnlyTriggerOnce = true;
                 }
                 if (RandomizerStarted == true)
@@ -1639,7 +1642,7 @@ namespace DR_RTM
                         CurrentSkipOnce = true;
                         currentSkip = currentSkip + 1;
                     }
-                    if (cutsceneID == 8 && Form1.spawnEnemies == true)
+                    if (cutsceneID == 8 && Form1.spawnEnemies != 0)
                     {
                         gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134782), 32);
                         gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134784), 64);
@@ -2002,12 +2005,6 @@ namespace DR_RTM
                             }
                             currentSkip = currentSkip - 1;
                         }
-                    }
-                    if (cutsceneID == 8 && Form1.spawnEnemies == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134782), 32);
-                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134784), 64);
-                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134845), 60);
                     }
                     if (TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 8)
                     {

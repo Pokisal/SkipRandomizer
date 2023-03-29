@@ -202,6 +202,7 @@ namespace DR_RTM
 
         private string Result = "";
     }
+
     public class Form1 : Form
     {
 
@@ -211,7 +212,7 @@ namespace DR_RTM
 
         public string CurrentlyOn;
 
-        public static bool spawnEnemies;
+        public static int spawnEnemies = 0;
 
         public static int MaxSkips;
 
@@ -232,7 +233,6 @@ namespace DR_RTM
         private Label label7;
         private Label timeDisplay;
 
-        private CheckBox checkBox1;
         private CheckBox checkBox2;
 
         private RadioButton radioButton1;
@@ -240,7 +240,7 @@ namespace DR_RTM
         private RadioButton radioButton3;
         private RadioButton radioButton4;
         private RadioButton radioButton5;
-
+        private Label label8;
         public static DateTime TimeRandomized;
 
 
@@ -392,7 +392,6 @@ namespace DR_RTM
             this.button2 = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
             this.button3 = new System.Windows.Forms.Button();
@@ -402,6 +401,7 @@ namespace DR_RTM
             this.radioButton3 = new System.Windows.Forms.RadioButton();
             this.radioButton4 = new System.Windows.Forms.RadioButton();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
+            this.label8 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // button1
@@ -504,20 +504,6 @@ namespace DR_RTM
             this.label5.Size = new System.Drawing.Size(100, 23);
             this.label5.TabIndex = 0;
             // 
-            // checkBox1
-            // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.checkBox1.ForeColor = System.Drawing.Color.White;
-            this.checkBox1.Location = new System.Drawing.Point(9, 222);
-            this.checkBox1.Margin = new System.Windows.Forms.Padding(2);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(228, 17);
-            this.checkBox1.TabIndex = 11;
-            this.checkBox1.Text = "Click to have Special Forces/Cultists active";
-            this.checkBox1.UseVisualStyleBackColor = false;
-            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
-            // 
             // checkBox2
             // 
             this.checkBox2.AutoSize = true;
@@ -526,7 +512,7 @@ namespace DR_RTM
             this.checkBox2.Location = new System.Drawing.Point(9, 241);
             this.checkBox2.Margin = new System.Windows.Forms.Padding(2);
             this.checkBox2.Name = "checkBox2";
-            this.checkBox2.Size = new System.Drawing.Size(196, 17);
+            this.checkBox2.Size = new System.Drawing.Size(153, 17);
             this.checkBox2.TabIndex = 12;
             this.checkBox2.Text = "Add Overtime to Timeskip?";
             this.checkBox2.UseVisualStyleBackColor = false;
@@ -539,7 +525,7 @@ namespace DR_RTM
             this.label6.Location = new System.Drawing.Point(6, 258);
             this.label6.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(41, 13);
+            this.label6.Size = new System.Drawing.Size(64, 13);
             this.label6.TabIndex = 14;
             this.label6.Text = "Seed = N/A";
             this.label6.Click += new System.EventHandler(this.label6_Click);
@@ -565,80 +551,91 @@ namespace DR_RTM
             this.label7.Location = new System.Drawing.Point(7, 274);
             this.label7.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(224, 13);
+            this.label7.Size = new System.Drawing.Size(205, 13);
             this.label7.TabIndex = 16;
             this.label7.Text = "Current case is: Game must be connected";
             // 
             // radioButton1
             // 
             this.radioButton1.AutoSize = true;
+            this.radioButton1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.radioButton1.Checked = true;
+            this.radioButton1.ForeColor = System.Drawing.Color.White;
             this.radioButton1.Location = new System.Drawing.Point(10, 51);
             this.radioButton1.Name = "radioButton1";
             this.radioButton1.Size = new System.Drawing.Size(67, 17);
             this.radioButton1.TabIndex = 17;
             this.radioButton1.TabStop = true;
             this.radioButton1.Text = "Timeskip";
-            this.radioButton1.UseVisualStyleBackColor = true;
+            this.radioButton1.UseVisualStyleBackColor = false;
             this.radioButton1.CheckedChanged += new System.EventHandler(this.radioButton1_CheckedChanged);
-            this.radioButton1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.radioButton1.ForeColor = System.Drawing.Color.White;
-            this.radioButton1.Checked = true;
             // 
             // radioButton2
             // 
             this.radioButton2.AutoSize = true;
+            this.radioButton2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.radioButton2.ForeColor = System.Drawing.Color.White;
             this.radioButton2.Location = new System.Drawing.Point(10, 74);
             this.radioButton2.Name = "radioButton2";
             this.radioButton2.Size = new System.Drawing.Size(79, 17);
             this.radioButton2.TabIndex = 18;
             this.radioButton2.TabStop = true;
             this.radioButton2.Text = "Psychoskip";
-            this.radioButton2.UseVisualStyleBackColor = true;
+            this.radioButton2.UseVisualStyleBackColor = false;
             this.radioButton2.CheckedChanged += new System.EventHandler(this.radioButton2_CheckedChanged);
-            this.radioButton2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.radioButton2.ForeColor = System.Drawing.Color.White;
             // 
             // radioButton3
             // 
             this.radioButton3.AutoSize = true;
+            this.radioButton3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.radioButton3.ForeColor = System.Drawing.Color.White;
             this.radioButton3.Location = new System.Drawing.Point(10, 97);
             this.radioButton3.Name = "radioButton3";
-            this.radioButton3.Size = new System.Drawing.Size(100, 17);
+            this.radioButton3.Size = new System.Drawing.Size(73, 17);
             this.radioButton3.TabIndex = 19;
             this.radioButton3.TabStop = true;
             this.radioButton3.Text = "All Bosses";
-            this.radioButton3.UseVisualStyleBackColor = true;
+            this.radioButton3.UseVisualStyleBackColor = false;
             this.radioButton3.CheckedChanged += new System.EventHandler(this.radioButton3_CheckedChanged);
-            this.radioButton3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.radioButton3.ForeColor = System.Drawing.Color.White;
             // 
             // radioButton4
             // 
             this.radioButton4.AutoSize = true;
+            this.radioButton4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.radioButton4.ForeColor = System.Drawing.Color.White;
             this.radioButton4.Location = new System.Drawing.Point(10, 120);
             this.radioButton4.Name = "radioButton4";
             this.radioButton4.Size = new System.Drawing.Size(113, 17);
             this.radioButton4.TabIndex = 20;
             this.radioButton4.TabStop = true;
             this.radioButton4.Text = "All Survivors (TBA)";
-            this.radioButton4.UseVisualStyleBackColor = true;
+            this.radioButton4.UseVisualStyleBackColor = false;
             this.radioButton4.CheckedChanged += new System.EventHandler(this.radioButton4_CheckedChanged);
-            this.radioButton4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.radioButton4.ForeColor = System.Drawing.Color.White;
             // 
             // radioButton5
             // 
             this.radioButton5.AutoSize = true;
+            this.radioButton5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.radioButton5.ForeColor = System.Drawing.Color.White;
             this.radioButton5.Location = new System.Drawing.Point(10, 143);
             this.radioButton5.Name = "radioButton5";
             this.radioButton5.Size = new System.Drawing.Size(105, 17);
             this.radioButton5.TabIndex = 21;
             this.radioButton5.TabStop = true;
             this.radioButton5.Text = "All Scoops (TBA)";
-            this.radioButton5.UseVisualStyleBackColor = true;
+            this.radioButton5.UseVisualStyleBackColor = false;
             this.radioButton5.CheckedChanged += new System.EventHandler(this.radioButton5_CheckedChanged);
-            this.radioButton5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.radioButton5.ForeColor = System.Drawing.Color.White;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.ForeColor = System.Drawing.Color.White;
+            this.label8.Location = new System.Drawing.Point(7, 225);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(224, 13);
+            this.label8.TabIndex = 22;
+            this.label8.Text = "Click to cycle enabling Special Forces/Cultists";
+            this.label8.Click += new System.EventHandler(this.label8_Click);
             // 
             // Form1
             // 
@@ -646,6 +643,7 @@ namespace DR_RTM
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
             this.ClientSize = new System.Drawing.Size(241, 292);
+            this.Controls.Add(this.label8);
             this.Controls.Add(this.radioButton5);
             this.Controls.Add(this.radioButton4);
             this.Controls.Add(this.radioButton3);
@@ -655,7 +653,6 @@ namespace DR_RTM
             this.Controls.Add(this.button3);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.checkBox2);
-            this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.textBox1);
@@ -742,17 +739,6 @@ namespace DR_RTM
                 button3.Text = "Revealed";
             }
         }
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
-        {
-            if (checkBox1.Checked)
-            {
-                spawnEnemies = true;
-            }
-            else
-            {
-                spawnEnemies = false;
-            }
-        }
 
         private void checkBox2_CheckedChanged(object sender, EventArgs e)
         {
@@ -793,6 +779,28 @@ namespace DR_RTM
         private void label6_Click(object sender, EventArgs e)
         {
             Clipboard.SetText($"{TimeSkip.Seed}");
+        }
+
+        private void label8_Click(object sender, EventArgs e)
+        {
+            spawnEnemies = spawnEnemies + 1;
+            if (spawnEnemies == 1)
+            {
+                label8.Text = "Special Forces Enabled!";
+            }
+            if (spawnEnemies == 2)
+            {
+                label8.Text = "Cultists Enabled!";
+            }
+            if (spawnEnemies == 3)
+            {
+                label8.Text = "Special Forces and Cultists Enabled!";
+            }
+            if (spawnEnemies == 4)
+            {
+                spawnEnemies = 0;
+                label8.Text = "Click to cycle enabling Special Forces/Cultists";
+            }
         }
     }
 }
