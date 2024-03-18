@@ -13,195 +13,6 @@ using System.Globalization;
 
 namespace DR_RTM
 {
-    public class MyLabel : Label
-    {
-        public static Label Set(string Text = "", Font Font = null, Color ForeColor = new Color(), Color BackColor = new Color())
-        {
-            Label l = new Label();
-            l.Text = Text;
-            l.Font = SystemFonts.MessageBoxFont;
-            l.ForeColor = (ForeColor == new Color()) ? Color.White : ForeColor;
-            l.BackColor = (BackColor == new Color()) ? Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32))))) : BackColor;
-            l.AutoSize = true;
-            return l;
-        }
-    }
-    public class MyButton : Button
-    {
-        public static Button Set(string Text = "", int Width = 102, int Height = 30, Font Font = null, Color ForeColor = new Color(), Color BackColor = new Color())
-        {
-            Button b = new Button();
-            b.Text = Text;
-            b.Width = Width;
-            b.Height = Height;
-            b.Font = (Font == null) ? new Font("Calibri", 12) : Font;
-            b.ForeColor = (ForeColor == new Color()) ? Color.White : ForeColor;
-            b.BackColor = (BackColor == new Color()) ? Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32))))) : BackColor;
-            b.UseVisualStyleBackColor = (b.BackColor == SystemColors.Control);
-            return b;
-        }
-    }
-    public partial class MyMessageBox : Form
-    {
-        private MyMessageBox()
-        {
-            this.panText = new FlowLayoutPanel();
-            this.panButtons = new FlowLayoutPanel();
-            this.SuspendLayout();
-            // 
-            // panText
-            // 
-            this.panText.Parent = this;
-            this.panText.AutoScroll = true;
-            this.panText.AutoSize = true;
-            this.panText.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            this.panText.Location = new Point(90, 90);
-            this.panText.Margin = new Padding(0);
-            this.panText.MaximumSize = new Size(500, 300);
-            this.panText.MinimumSize = new Size(108, 50);
-            this.panText.Size = new Size(108, 50);
-            // 
-            // panButtons
-            // 
-            this.panButtons.AutoSize = true;
-            this.panButtons.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            this.panButtons.FlowDirection = FlowDirection.RightToLeft;
-            this.panButtons.Location = new Point(89, 89);
-            this.panButtons.Margin = new Padding(0);
-            this.panButtons.MaximumSize = new Size(580, 150);
-            this.panButtons.MinimumSize = new Size(108, 0);
-            this.panButtons.Size = new Size(108, 35);
-            // 
-            // MyMessageBox
-            //
-            this.BackColor = Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
-            this.AutoScaleDimensions = new SizeF(8F, 19F);
-            this.AutoScaleMode = AutoScaleMode.Font;
-            this.ClientSize = new Size(206, 133);
-            this.Controls.Add(this.panButtons);
-            this.Controls.Add(this.panText);
-            this.Font = SystemFonts.MessageBoxFont;
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            this.Margin = new Padding(4);
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.MinimumSize = new Size(168, 132);
-            this.Name = "MyMessageBox";
-            this.ShowIcon = false;
-            this.ShowInTaskbar = false;
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.ResumeLayout(false);
-            this.PerformLayout();
-        }
-        [DllImport("DwmApi")]
-        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, int[] attrValue, int attrSize);
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            if (DwmSetWindowAttribute(Handle, 19, new[] { 1 }, 4) != 0)
-                DwmSetWindowAttribute(Handle, 20, new[] { 1 }, 4);
-        }
-        public static string Show(Label Label, string Title = "", List<Button> Buttons = null, PictureBox Image = null)
-        {
-            List<Label> Labels = new List<Label>();
-            Labels.Add(Label);
-            return Show(Labels, Title, Buttons, Image);
-        }
-        public static string Show(string Label, string Title = "", List<Button> Buttons = null, PictureBox Image = null)
-        {
-            List<Label> Labels = new List<Label>();
-            Labels.Add(MyLabel.Set(Label));
-            return Show(Labels, Title, Buttons, Image);
-        }
-        public static string Show(List<Label> Labels = null, string Title = "", List<Button> Buttons = null, PictureBox Image = null)
-        {
-            if (Labels == null) Labels = new List<Label>();
-            if (Labels.Count == 0) Labels.Add(MyLabel.Set(""));
-            if (Buttons == null) Buttons = new List<Button>();
-            if (Buttons.Count == 0) Buttons.Add(MyButton.Set("OK"));
-            List<Button> buttons = new List<Button>(Buttons);
-            buttons.Reverse();
-
-            int ImageWidth = 0;
-            int ImageHeight = 0;
-            int LabelWidth = 0;
-            int LabelHeight = 0;
-            int ButtonWidth = 0;
-            int ButtonHeight = 0;
-            int TotalWidth = 0;
-            int TotalHeight = 0;
-
-            MyMessageBox mb = new MyMessageBox();
-
-            mb.Text = Title;
-
-            //Labels
-            List<int> il = new List<int>();
-            mb.panText.Location = new Point(9 + ImageWidth, 9);
-            foreach (Label l in Labels)
-            {
-                mb.panText.Controls.Add(l);
-                l.Location = new Point(200, 50);
-                l.MaximumSize = new Size(480, 2000);
-                il.Add(l.Width);
-            }
-            int mw = Labels.Max(x => x.Width);
-            il.ToString();
-            Labels.ForEach(l => l.MinimumSize = new Size(Labels.Max(x => x.Width), 1));
-            mb.panText.Height = Labels.Sum(l => l.Height);
-            mb.panText.MinimumSize = new Size(Labels.Max(x => x.Width) + mb.ScrollBarWidth(Labels), ImageHeight);
-            mb.panText.MaximumSize = new Size(Labels.Max(x => x.Width) + mb.ScrollBarWidth(Labels), 300);
-            LabelWidth = mb.panText.Width;
-            LabelHeight = mb.panText.Height;
-
-            //Buttons
-            foreach (Button b in buttons)
-            {
-                mb.panButtons.Controls.Add(b);
-                b.Location = new Point(3, 3);
-                b.TabIndex = Buttons.FindIndex(i => i.Text == b.Text);
-                b.Click += new EventHandler(mb.Button_Click);
-            }
-            ButtonWidth = mb.panButtons.Width;
-            ButtonHeight = mb.panButtons.Height;
-
-            //Set Widths
-            if (ButtonWidth > ImageWidth + LabelWidth)
-            {
-                Labels.ForEach(l => l.MinimumSize = new Size(ButtonWidth - ImageWidth - mb.ScrollBarWidth(Labels), 1));
-                mb.panText.Height = Labels.Sum(l => l.Height);
-                mb.panText.MinimumSize = new Size(Labels.Max(x => x.Width) + mb.ScrollBarWidth(Labels), ImageHeight);
-                mb.panText.MaximumSize = new Size(Labels.Max(x => x.Width) + mb.ScrollBarWidth(Labels), 300);
-                LabelWidth = mb.panText.Width;
-                LabelHeight = mb.panText.Height;
-            }
-            TotalWidth = ImageWidth + LabelWidth;
-
-            //Set Height
-            TotalHeight = LabelHeight + ButtonHeight;
-
-            mb.panButtons.Location = new Point(TotalWidth - ButtonWidth + 9, mb.panText.Location.Y + mb.panText.Height);
-
-            mb.Size = new Size(TotalWidth + 25, TotalHeight + 47);
-            mb.ShowDialog();
-            return mb.Result;
-        }
-
-        private FlowLayoutPanel panText;
-        private FlowLayoutPanel panButtons;
-        private int ScrollBarWidth(List<Label> Labels)
-        {
-            return (Labels.Sum(l => l.Height) > 300) ? 23 : 6;
-        }
-
-        private void Button_Click(object sender, EventArgs e)
-        {
-            Result = ((Button)sender).Text;
-            Close();
-        }
-
-        private string Result = "";
-    }
 
     public class Form1 : Form
     {
@@ -209,6 +20,8 @@ namespace DR_RTM
         private delegate void TimeDisplayUpdateCallback(string text);
 
         private IContainer components;
+
+        public static string localseed;
 
         public string CurrentlyOn;
 
@@ -295,29 +108,33 @@ namespace DR_RTM
                 }
             }
             timeDisplay.Text = text;
-            if (TimeSkip.TimeskipOrder == null)
+            if (TimeSkip.TimeskipOrder.Count == 0)
             {
-                CurrentlyOn = "A";
-            }
-            if (TimeSkip.TimeskipOrder.ElementAt(TimeSkip.currentSkip) != " ")
-            {
-                CurrentlyOn = TimeSkip.TimeskipOrder.ElementAt(TimeSkip.currentSkip);
-            }
-            else if (TimeSkip.TimeskipOrder.ElementAt(TimeSkip.currentSkip) == " " && TimeSkip.cutsceneID != 52)
-            {
-                CurrentlyOn = "Finished";
+                CurrentlyOn = "Game not randomized yet!";
+                label7.Text = CurrentlyOn;
             }
             else
             {
-                CurrentlyOn = "Return to the Security Room";
-            }
-            if (TimeSkip.RandomizerStarted == true)
-            {
-                label7.Text = $"Current case is: {CurrentlyOn}";
-            }
-            if (TimeSkip.RandomizerStarted == false)
-            {
-                label7.Text = "Current case is: 1-1 has not been triggered yet";
+                if (TimeSkip.TimeskipOrder.ElementAt(TimeSkip.currentSkip).Key != "Buffer" && TimeSkip.TimeskipOrder.Count != 0)
+                {
+                    CurrentlyOn = TimeSkip.TimeskipOrder.ElementAt(TimeSkip.currentSkip).Key;
+                }
+                else if (TimeSkip.TimeskipOrder.ElementAt(TimeSkip.currentSkip).Key == "Buffer" && TimeSkip.cutsceneID != 52 && TimeSkip.TimeskipOrder.Count != 0)
+                {
+                    CurrentlyOn = "Finished";
+                }
+                else
+                {
+                    CurrentlyOn = "Return to the Security Room";
+                }
+                if (TimeSkip.RandomizerStarted == true)
+                {
+                    label7.Text = $"Current case is: {CurrentlyOn}";
+                }
+                if (TimeSkip.RandomizerStarted == false)
+                {
+                    label7.Text = "Current case is: 1-1 has not been triggered yet";
+                }
             }
         }
 
@@ -671,25 +488,16 @@ namespace DR_RTM
         }
         public void textBox1_TextChanged(object sender, EventArgs e)
         {
-            textBox1.MaxLength = 9;
             if (textBox1.Text != "")
             {
-                try
-                {
-                    int seedInput = Convert.ToInt32(textBox1.Text);
-                    TimeSkip.Seed = seedInput;
-                }
-                catch (FormatException)
-                {
-                    textBox1.Text = "";
-                    MyMessageBox.Show("Pasted seed contained non digit characters  \r\n ", "Error");
-                }
+                localseed = textBox1.Text;
+                TimeSkip.Seed = textBox1.Text.GetHashCode();
             }
         }
 
         private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
         {
-            e.Handled = !(Char.IsNumber(e.KeyChar) || e.KeyChar == 3 || e.KeyChar == 8 || e.KeyChar == 22);
+
         }
 
         private void button2_Click_1(object sender, EventArgs e)
@@ -698,44 +506,33 @@ namespace DR_RTM
             TimeSkip.OnlyTriggerOnce = false;
             TimeSkip.CreateList();
             TimeSkip.RandomizerStarted = false;
-            TimeSkip.FactsTriggered = false;
             if (textBox1.Text == "")
             {
                 TimeSkip.SeedRandomizer();
             }
             TimeSkip.Randomize();
-            /// Remove comment and add Timeskips you wish to test in the quotation marks.
-            /// TimeSkip.TimeskipOrder.Insert(0, "");
-            /// TimeSkip.TimeskipOrder.Insert(1, "");
-            TimeSkip.TimeskipOrder.Add(" ");
-            TimeSkip.TimeskipOrder.Add(" ");
             TimeSkip.currentSkip = 0;
             MaxSkips = TimeSkip.TimeskipOrder.Count;
             textBox1.Text = null;
             button3.Text = "Reveal";
-            label6.Text = $"Seed = {TimeSkip.Seed}";
+            label6.Text = $"Seed = {localseed}";
         }
 
         private void button3_Click_1(object sender, EventArgs e)
         {
             if (TimeSkip.SelectedCategory == "Timeskip" && TimeSkip.includeOvertime == false && MaxSkips < 17 && TimeRandomized != DateTime.MinValue)
             {
-                MyMessageBox.Show(TimeSkip.TimeskipOrder.ElementAt(0) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(1) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(2) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(3) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(4) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(5) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(6) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(7) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(8) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(9) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(10) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(11) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(12) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(13) + "\r\n" + "\r\n" + "Randomized: " + TimeRandomized);
+                MyMessageBox.Show(TimeSkip.TimeskipOrder.ElementAt(0).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(1).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(2).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(3).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(4).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(5).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(6).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(7).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(8).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(9).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(10).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(11).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(12).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(13).Key + "\r\n" + "\r\n" + "Randomized: " + TimeRandomized);
                 button3.Text = "Revealed";
             }
             if (TimeSkip.SelectedCategory == "Timeskip" && TimeSkip.includeOvertime == true && MaxSkips > 16 && TimeRandomized != DateTime.MinValue)
             {
-                MyMessageBox.Show(TimeSkip.TimeskipOrder.ElementAt(0) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(1) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(2) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(3) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(4) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(5) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(6) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(7) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(8) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(9) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(10) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(11) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(12) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(13) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(14) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(15) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(16) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(17) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(18) + "\r\n" + "\r\n" + "Randomized: " + TimeRandomized);
+                MyMessageBox.Show(TimeSkip.TimeskipOrder.ElementAt(0).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(1).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(2).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(3).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(4).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(5).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(6).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(7).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(8).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(9).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(10).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(11).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(12).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(13).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(14).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(15).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(16).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(17).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(18).Key + "\r\n" + "\r\n" + "Randomized: " + TimeRandomized);
                 button3.Text = "Revealed";
             }
             if (TimeSkip.SelectedCategory == "Psychoskip" && TimeRandomized != DateTime.MinValue)
             {
-                MyMessageBox.Show(TimeSkip.TimeskipOrder.ElementAt(0) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(1) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(2) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(3) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(4) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(5) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(6) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(7) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(8) + "\r\n" + "\r\n" + "Randomized: " + TimeRandomized + "\r\n ");
-                button3.Text = "Revealed";
-            }
-            if (TimeSkip.SelectedCategory == "All Bosses" && TimeRandomized != DateTime.MinValue)
-            {
-                MyMessageBox.Show(TimeSkip.TimeskipOrder.ElementAt(0) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(1) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(2) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(3) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(4) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(5) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(6) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(7) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(8) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(9) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(10) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(11) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(12) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(13) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(14) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(15) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(16) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(17) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(18) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(19) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(20) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(21) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(22) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(23) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(24) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(25) + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(26) + "\r\n" + "\r\n" + "Randomized: " + TimeRandomized);
+                MyMessageBox.Show(TimeSkip.TimeskipOrder.ElementAt(0).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(1).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(2).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(3).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(4).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(5).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(6).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(7).Key + "\r\n" + TimeSkip.TimeskipOrder.ElementAt(8).Key + "\r\n" + "\r\n" + "Randomized: " + TimeRandomized + "\r\n ");
                 button3.Text = "Revealed";
             }
         }
@@ -778,12 +575,12 @@ namespace DR_RTM
         }
         private void label6_Click(object sender, EventArgs e)
         {
-            Clipboard.SetText($"{TimeSkip.Seed}");
+            Clipboard.SetText($"{localseed}");
         }
 
         private void label8_Click(object sender, EventArgs e)
         {
-            spawnEnemies = spawnEnemies + 1;
+            spawnEnemies++;
             if (spawnEnemies == 1)
             {
                 label8.Text = "Special Forces Enabled!";
@@ -802,5 +599,194 @@ namespace DR_RTM
                 label8.Text = "Click to cycle enabling Special Forces/Cultists";
             }
         }
+    }
+    public class MyLabel : Label
+    {
+        public static Label Set(string Text = "", Font Font = null, Color ForeColor = new Color(), Color BackColor = new Color())
+        {
+            Label l = new Label();
+            l.Text = Text;
+            l.Font = SystemFonts.MessageBoxFont;
+            l.ForeColor = (ForeColor == new Color()) ? Color.White : ForeColor;
+            l.BackColor = (BackColor == new Color()) ? Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32))))) : BackColor;
+            l.AutoSize = true;
+            return l;
+        }
+    }
+    public class MyButton : Button
+    {
+        public static Button Set(string Text = "", int Width = 102, int Height = 30, Font Font = null, Color ForeColor = new Color(), Color BackColor = new Color())
+        {
+            Button b = new Button();
+            b.Text = Text;
+            b.Width = Width;
+            b.Height = Height;
+            b.Font = (Font == null) ? new Font("Calibri", 12) : Font;
+            b.ForeColor = (ForeColor == new Color()) ? Color.White : ForeColor;
+            b.BackColor = (BackColor == new Color()) ? Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32))))) : BackColor;
+            b.UseVisualStyleBackColor = (b.BackColor == SystemColors.Control);
+            return b;
+        }
+    }
+    public partial class MyMessageBox : Form
+    {
+        private MyMessageBox()
+        {
+            this.panText = new FlowLayoutPanel();
+            this.panButtons = new FlowLayoutPanel();
+            this.SuspendLayout();
+            // 
+            // panText
+            // 
+            this.panText.Parent = this;
+            this.panText.AutoScroll = true;
+            this.panText.AutoSize = true;
+            this.panText.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            this.panText.Location = new Point(90, 90);
+            this.panText.Margin = new Padding(0);
+            this.panText.MaximumSize = new Size(500, 300);
+            this.panText.MinimumSize = new Size(108, 50);
+            this.panText.Size = new Size(108, 50);
+            // 
+            // panButtons
+            // 
+            this.panButtons.AutoSize = true;
+            this.panButtons.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            this.panButtons.FlowDirection = FlowDirection.RightToLeft;
+            this.panButtons.Location = new Point(89, 89);
+            this.panButtons.Margin = new Padding(0);
+            this.panButtons.MaximumSize = new Size(580, 150);
+            this.panButtons.MinimumSize = new Size(108, 0);
+            this.panButtons.Size = new Size(108, 35);
+            // 
+            // MyMessageBox
+            //
+            this.BackColor = Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
+            this.AutoScaleDimensions = new SizeF(8F, 19F);
+            this.AutoScaleMode = AutoScaleMode.Font;
+            this.ClientSize = new Size(206, 133);
+            this.Controls.Add(this.panButtons);
+            this.Controls.Add(this.panText);
+            this.Font = SystemFonts.MessageBoxFont;
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.Margin = new Padding(4);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.MinimumSize = new Size(168, 132);
+            this.Name = "MyMessageBox";
+            this.ShowIcon = false;
+            this.ShowInTaskbar = false;
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.ResumeLayout(false);
+            this.PerformLayout();
+        }
+        [DllImport("DwmApi")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, int[] attrValue, int attrSize);
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            if (DwmSetWindowAttribute(Handle, 19, new[] { 1 }, 4) != 0)
+                DwmSetWindowAttribute(Handle, 20, new[] { 1 }, 4);
+        }
+        public static string Show(Label Label, string Title = "", List<Button> Buttons = null, PictureBox Image = null)
+        {
+            List<Label> Labels = new List<Label>();
+            Labels.Add(Label);
+            return Show(Labels, Title, Buttons, Image);
+        }
+        public static string Show(string Label, string Title = "", List<Button> Buttons = null, PictureBox Image = null)
+        {
+            List<Label> Labels = new List<Label>();
+            Labels.Add(MyLabel.Set(Label));
+            return Show(Labels, Title, Buttons, Image);
+        }
+        public static string Show(List<Label> Labels = null, string Title = "", List<Button> Buttons = null, PictureBox Image = null)
+        {
+            if (Labels == null) Labels = new List<Label>();
+            if (Labels.Count == 0) Labels.Add(MyLabel.Set(""));
+            if (Buttons == null) Buttons = new List<Button>();
+            if (Buttons.Count == 0) Buttons.Add(MyButton.Set("OK"));
+            List<Button> buttons = new List<Button>(Buttons);
+            buttons.Reverse();
+
+            int ImageWidth = 0;
+            int ImageHeight = 0;
+            int LabelWidth = 0;
+            int LabelHeight = 0;
+            int ButtonWidth = 0;
+            int ButtonHeight = 0;
+            int TotalWidth = 0;
+            int TotalHeight = 0;
+
+            MyMessageBox mb = new MyMessageBox();
+
+            mb.Text = Title;
+
+            //Labels
+            List<int> il = new List<int>();
+            mb.panText.Location = new Point(9 + ImageWidth, 9);
+            foreach (Label l in Labels)
+            {
+                mb.panText.Controls.Add(l);
+                l.Location = new Point(200, 50);
+                l.MaximumSize = new Size(480, 2000);
+                il.Add(l.Width);
+            }
+            int mw = Labels.Max(x => x.Width);
+            il.ToString();
+            Labels.ForEach(l => l.MinimumSize = new Size(Labels.Max(x => x.Width), 1));
+            mb.panText.Height = Labels.Sum(l => l.Height);
+            mb.panText.MinimumSize = new Size(Labels.Max(x => x.Width) + mb.ScrollBarWidth(Labels), ImageHeight);
+            mb.panText.MaximumSize = new Size(Labels.Max(x => x.Width) + mb.ScrollBarWidth(Labels), 300);
+            LabelWidth = mb.panText.Width;
+            LabelHeight = mb.panText.Height;
+
+            //Buttons
+            foreach (Button b in buttons)
+            {
+                mb.panButtons.Controls.Add(b);
+                b.Location = new Point(3, 3);
+                b.TabIndex = Buttons.FindIndex(i => i.Text == b.Text);
+                b.Click += new EventHandler(mb.Button_Click);
+            }
+            ButtonWidth = mb.panButtons.Width;
+            ButtonHeight = mb.panButtons.Height;
+
+            //Set Widths
+            if (ButtonWidth > ImageWidth + LabelWidth)
+            {
+                Labels.ForEach(l => l.MinimumSize = new Size(ButtonWidth - ImageWidth - mb.ScrollBarWidth(Labels), 1));
+                mb.panText.Height = Labels.Sum(l => l.Height);
+                mb.panText.MinimumSize = new Size(Labels.Max(x => x.Width) + mb.ScrollBarWidth(Labels), ImageHeight);
+                mb.panText.MaximumSize = new Size(Labels.Max(x => x.Width) + mb.ScrollBarWidth(Labels), 300);
+                LabelWidth = mb.panText.Width;
+                LabelHeight = mb.panText.Height;
+            }
+            TotalWidth = ImageWidth + LabelWidth;
+
+            //Set Height
+            TotalHeight = LabelHeight + ButtonHeight;
+
+            mb.panButtons.Location = new Point(TotalWidth - ButtonWidth + 9, mb.panText.Location.Y + mb.panText.Height);
+
+            mb.Size = new Size(TotalWidth + 34, TotalHeight + 47);
+            mb.ShowDialog();
+            return mb.Result;
+        }
+
+        private FlowLayoutPanel panText;
+        private FlowLayoutPanel panButtons;
+        private int ScrollBarWidth(List<Label> Labels)
+        {
+            return (Labels.Sum(l => l.Height) > 300) ? 23 : 6;
+        }
+
+        private void Button_Click(object sender, EventArgs e)
+        {
+            Result = ((Button)sender).Text;
+            Close();
+        }
+
+        private string Result = "";
     }
 }

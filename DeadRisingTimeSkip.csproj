@@ -16,7 +16,9 @@
     <RootNamespace />
     <StartupObject />
   </PropertyGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Compile Remove="DR_RTM\BackupTimeSkip.cs" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />

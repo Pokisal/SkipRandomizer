@@ -23,19 +23,34 @@ namespace DR_RTM
 
         private static ReadWriteMemory.ProcessMemory gameMemory;
 
-        public static List<string> TimeskipOrder = new(1) { "A" };
+        public static Dictionary<string, int[]> TimeskipOrder = new Dictionary<string, int[]>() { };
 
         public static List<string> TunnelsMissions = new() { "Tunnels", "Tank", "Brock" };
 
-        public static List<string> PsychoSkips = new() { "Kent 3", "Convicts", "sean", "Snipers", "Adam", "Jo", "Paul", "Cletus", "Cliff" };
+        public static List<string> OvertimeMissions = new() { "Supplies", "Queens", "Tunnels", "Tank", "Brock" };
 
-        public static List<uint> CutscenesToSkipOn = new() { };
+        public static List<string> PsychoSkips = new() { "Kent 3", "Convicts", "Sean", "Snipers", "Adam", "Jo", "Paul", "Cletus", "Cliff" };
 
         public static long TicksElapsed;
 
         public static long BeforeMovementLockedTicks;
 
         public static long MovementLockedTicks;
+
+        public static byte MissionByte1;
+        public static byte MissionByte2;
+        public static byte MissionByte3;
+        public static byte MissionByte4;
+        public static byte MissionByte5;
+        public static byte MissionByte6;
+        public static byte MissionByte7;
+        public static byte MissionByte8;
+        public static byte MissionByte9;
+
+        public static byte Carlito2Death;
+
+        public static byte CultistsByte;
+
 
         private static IntPtr gameTimePtr;
 
@@ -65,15 +80,9 @@ namespace DR_RTM
 
         private const int gameTimeOffset = 408;
 
-        private static uint MovementLock1;
-
-        private static uint MovementLock2;
-
         public static uint cutsceneID;
 
         public static uint LastCutscene;
-
-        public static uint LastCutsceneSkip;
 
         public static uint Teleport;
 
@@ -82,10 +91,6 @@ namespace DR_RTM
         public static byte cGametask;
 
         private static byte SpawnBosses;
-
-        private static byte jessieSpeaking;
-
-        private static byte CarlitoHideoutTrigger;
 
         private static byte WatchCaseDisplay;
 
@@ -129,29 +134,38 @@ namespace DR_RTM
 
         public static int currentSkip = 0;
 
-        private static uint FrankX;
-
-        private static uint FrankY;
-
-        private static uint FrankZ;
-
         private static uint BossHealth;
 
-        private static uint MainKillCount;
-
-        private static uint SubKillCount = 999999;
-
         public static bool OnlyTriggerOnce = false;
-
-        public static bool OnlyTriggerOnce2 = false;
-
-        public static bool CurrentSkipOnce = false;
-
-        public static bool FactsTriggered = false;
 
         public static void Init()
         {
         }
+
+        /// BytetoBit usage:
+        /// Insert byte you want to check a bit's value
+        /// Insert int of the bit's position
+        /// 0 = 1's place 1 = 2's place 2 = 4's place etc.
+
+        static bool BytetoBit(byte a, int b)
+        {
+            byte[] bytearray = { a };
+            var bitarray = new BitArray(bytearray);
+            return bitarray.Get(b);
+        }
+
+        static bool LowerProgress(int a)
+        {
+            if (a < TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(4))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         public static string StringTime(uint time)
         {
             uint num = time / 108000u % 24u;
@@ -174,24 +188,14 @@ namespace DR_RTM
             Random rand = new Random();
             int randomseed = rand.Next(0, 999999999);
             Seed = randomseed;
-        }
-        public static void Shuffle<T>(List<T> list, int seed)
-        {
-            var rng = new Random(Seed);
-            int n = list.Count;
-
-            while (n > 1)
-            {
-                n--;
-                int k = rng.Next(n + 1);
-                T value = list[k];
-                list[k] = list[n];
-                list[n] = value;
-            }
+            Form1.localseed = Seed.ToString();
         }
         public static void Randomize()
         {
-            Shuffle(TimeskipOrder, Seed);
+            Random rand = new Random(Seed);
+            TimeskipOrder = TimeskipOrder.OrderBy(x => rand.Next()).ToDictionary(item => item.Key, item => item.Value);
+            TimeskipOrder.Add("Ending", new int[] {52, 999, 0, 0 });
+            TimeskipOrder.Add("Buffer", new int[] { });
         }
 
         public static void RestoreCode()
@@ -206,132 +210,44 @@ namespace DR_RTM
             if (SelectedCategory == "Timeskip")
             {
                 TimeskipOrder.Clear();
-                CutscenesToSkipOn.Clear();
-                TimeskipOrder.Add("Backup For Brad");
-                TimeskipOrder.Add("An Odd Old Man");
-                TimeskipOrder.Add("A Temporary Agreement");
-                TimeskipOrder.Add("Rescue The Professor");
-                TimeskipOrder.Add("Medicine Run");
-                TimeskipOrder.Add("Girl Hunting");
-                TimeskipOrder.Add("A Promise To Isabella");
-                TimeskipOrder.Add("Transporting Isabella");
-                TimeskipOrder.Add("Bomb Collector");
-                TimeskipOrder.Add("Jamming Device");
-                TimeskipOrder.Add("Hideout");
-                TimeskipOrder.Add("Jessie's Discovery");
-                TimeskipOrder.Add("The Butcher");
-                TimeskipOrder.Add("Memories");
-                CutscenesToSkipOn.Add(8);
-                CutscenesToSkipOn.Add(10);
-                CutscenesToSkipOn.Add(12);
-                CutscenesToSkipOn.Add(13);
-                CutscenesToSkipOn.Add(17);
-                CutscenesToSkipOn.Add(18);
-                CutscenesToSkipOn.Add(24);
-                CutscenesToSkipOn.Add(27);
-                CutscenesToSkipOn.Add(31);
-                CutscenesToSkipOn.Add(33);
-                CutscenesToSkipOn.Add(39);
-                CutscenesToSkipOn.Add(41);
-                CutscenesToSkipOn.Add(42);
-                CutscenesToSkipOn.Add(43);
-                CutscenesToSkipOn.Add(45);
-                CutscenesToSkipOn.Add(47);
+                /// Format is: Cutscene ID to be written to start mission, Cutscene ID when mission is finished, 
+                /// an integer to be added to another integer to tell the game which mission is being written to the watch, any potential bytes to spawn bosses/survivors,
+                /// and finally a byte to specify which pointer the boss/survivor integer needs to be written to.
+                TimeskipOrder.Add("Backup For Brad", new int[] { 8, 10, 0, 0, 1});
+                TimeskipOrder.Add("An Odd Old Man", new int[] { 10, 12, 0, 0, 2});
+                TimeskipOrder.Add("A Temporary Agreement", new int[] { 12, 13, 0, 3});
+                TimeskipOrder.Add("Rescue The Professor", new int[] { 15, 17, 1, 4});
+                TimeskipOrder.Add("Medicine Run", new int[] { 17, 24, 1, 5});
+                TimeskipOrder.Add("Girl Hunting", new int[] { 25, 27, 3, 6});
+                TimeskipOrder.Add("A Promise To Isabella", new int[] { 27, 31, 4, 7});
+                TimeskipOrder.Add("Transporting Isabella", new int[] { 31, 33, 4, 8});
+                TimeskipOrder.Add("Bomb Collector", new int[] { 37, 39, 6, 9});
+                TimeskipOrder.Add("Jamming Device", new int[] { 39, 41, 7, 10});
+                TimeskipOrder.Add("Hideout", new int[] { 41, 42, 7, 11});
+                TimeskipOrder.Add("Jessie's Discovery", new int[] { 42, 43, 7, 12});
+                TimeskipOrder.Add("The Butcher", new int[] { 43, 45, 7, 13});
+                TimeskipOrder.Add("Memories", new int[] { 45, 46, 8, 14});
                 if (includeOvertime == true)
                 {
-                    TimeskipOrder.Add("Supplies");
-                    TimeskipOrder.Add("Queens");
-                    TimeskipOrder.Add("Tunnels");
-                    TimeskipOrder.Add("Tank");
-                    TimeskipOrder.Add("Brock");
-                    CutscenesToSkipOn.Add(135);
-                    CutscenesToSkipOn.Add(132);
-                    CutscenesToSkipOn.Add(126);
-                    CutscenesToSkipOn.Add(144);
+                    TimeskipOrder.Add("Supplies", new int[] { 135, 132 });
+                    TimeskipOrder.Add("Queens", new int[] { 132, 126 });
+                    TimeskipOrder.Add("Tunnels", new int[] { 126, 136 });
+                    TimeskipOrder.Add("Tank", new int[] { 136, 144 });
+                    TimeskipOrder.Add("Brock", new int[] { 144, 144 });
                 }
             }
             else if (SelectedCategory == "Psychoskip")
             {
                 TimeskipOrder.Clear();
-                CutscenesToSkipOn.Clear();
-                TimeskipOrder.Add("Convicts");
-                TimeskipOrder.Add("Cliff");
-                TimeskipOrder.Add("Cletus");
-                TimeskipOrder.Add("Adam");
-                TimeskipOrder.Add("Jo");
-                TimeskipOrder.Add("Snipers");
-                TimeskipOrder.Add("Sean");
-                TimeskipOrder.Add("Paul");
-                TimeskipOrder.Add("Kent 3");
-                CutscenesToSkipOn.Add(70);
-                CutscenesToSkipOn.Add(71);
-                CutscenesToSkipOn.Add(72);
-                CutscenesToSkipOn.Add(73);
-                CutscenesToSkipOn.Add(74);
-                CutscenesToSkipOn.Add(75);
-                CutscenesToSkipOn.Add(76);
-                CutscenesToSkipOn.Add(77);
-            }
-            else if (SelectedCategory == "All Bosses")
-            {
-                TimeskipOrder.Clear();
-                CutscenesToSkipOn.Clear();
-                TimeskipOrder.Add("Backup For Brad");
-                TimeskipOrder.Add("An Odd Old Man");
-                TimeskipOrder.Add("A Temporary Agreement");
-                TimeskipOrder.Add("Rescue The Professor");
-                TimeskipOrder.Add("Medicine Run");
-                TimeskipOrder.Add("Girl Hunting");
-                TimeskipOrder.Add("A Promise To Isabella");
-                TimeskipOrder.Add("Transporting Isabella");
-                TimeskipOrder.Add("Bomb Collector");
-                TimeskipOrder.Add("Jamming Device");
-                TimeskipOrder.Add("Hideout");
-                TimeskipOrder.Add("Jessie's Discovery");
-                TimeskipOrder.Add("The Butcher");
-                TimeskipOrder.Add("Memories");
-                TimeskipOrder.Add("Convicts");
-                TimeskipOrder.Add("Cliff");
-                TimeskipOrder.Add("Cletus");
-                TimeskipOrder.Add("Adam");
-                TimeskipOrder.Add("Jo");
-                TimeskipOrder.Add("Snipers");
-                TimeskipOrder.Add("Sean");
-                TimeskipOrder.Add("Paul");
-                TimeskipOrder.Add("Kent 3");
-                TimeskipOrder.Add("Supplies");
-                TimeskipOrder.Add("Queens");
-                TimeskipOrder.Add("Tunnels");
-                TimeskipOrder.Add("Tank");
-                TimeskipOrder.Add("Brock");
-                CutscenesToSkipOn.Add(8);
-                CutscenesToSkipOn.Add(10);
-                CutscenesToSkipOn.Add(12);
-                CutscenesToSkipOn.Add(13);
-                CutscenesToSkipOn.Add(17);
-                CutscenesToSkipOn.Add(18);
-                CutscenesToSkipOn.Add(24);
-                CutscenesToSkipOn.Add(27);
-                CutscenesToSkipOn.Add(31);
-                CutscenesToSkipOn.Add(33);
-                CutscenesToSkipOn.Add(39);
-                CutscenesToSkipOn.Add(41);
-                CutscenesToSkipOn.Add(42);
-                CutscenesToSkipOn.Add(43);
-                CutscenesToSkipOn.Add(45);
-                CutscenesToSkipOn.Add(47);
-                CutscenesToSkipOn.Add(70);
-                CutscenesToSkipOn.Add(71);
-                CutscenesToSkipOn.Add(72);
-                CutscenesToSkipOn.Add(73);
-                CutscenesToSkipOn.Add(74);
-                CutscenesToSkipOn.Add(75);
-                CutscenesToSkipOn.Add(76);
-                CutscenesToSkipOn.Add(77);
-                CutscenesToSkipOn.Add(135);
-                CutscenesToSkipOn.Add(132);
-                CutscenesToSkipOn.Add(126);
-                CutscenesToSkipOn.Add(144);
+                TimeskipOrder.Add("Convicts", new int[] { 999, 999, 243, 132, 3 });
+                TimeskipOrder.Add("Cliff", new int[] { 999, 71, 64, 1, 64, 0 });
+                TimeskipOrder.Add("Cletus", new int[] { 999, 72, 19, 36, 4 });
+                TimeskipOrder.Add("Adam", new int[] { 999, 74, 3, 17, 1 });
+                TimeskipOrder.Add("Jo", new int[] { 999, 75, 4, 210, 1 });
+                TimeskipOrder.Add("Snipers", new int[] { 999, 999, 11, 77, 4 });
+                TimeskipOrder.Add("Sean", new int[] { 999, 73, 2, 208, 0 });
+                TimeskipOrder.Add("Paul", new int[] { 999, 76, 5, 214, 1 });
+                TimeskipOrder.Add("Kent 3", new int[] { 999, 70, 0, 32, 0 });
             }
         }
 
@@ -366,6 +282,7 @@ namespace DR_RTM
             old.loadingRoomId = loadingRoomId;
             old.caseMenuState = caseMenuState;
             old.cutsceneID = cutsceneID;
+            old.cGametask = cGametask;
             DeadRisingPtr = gameMemory.Pointer("DeadRising.exe");
             cutsceneIDPtr = gameMemory.Pointer("DeadRising.exe", 26496472, 134592);
             cutsceneOnLoadPtr = gameMemory.Pointer("DeadRising.exe", 26496472, 134592);
@@ -379,7 +296,6 @@ namespace DR_RTM
             SpawnBossesPtr = gameMemory.Pointer("DeadRising.exe", 26496472);
             SpawnBosses = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134841));
             JeepActivated = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134826));
-            CarlitoHideoutTrigger = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134788));
             caseMenuState = gameMemory.ReadByte(IntPtr.Add(caseMenuStatePtr, 386));
             saveMenuState = gameMemory.ReadByte(IntPtr.Add(saveMenuStatePtr, 9956));
             cGametask = gameMemory.ReadByte(IntPtr.Add(cGametaskPtr, 56));
@@ -396,19 +312,23 @@ namespace DR_RTM
             Convicts1 = gameMemory.ReadUInt(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 30352928, 160, 4640, 448), 4844));
             Convicts2 = gameMemory.ReadUInt(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 30352928, 160, 4640, 416), 4844));
             Convicts3 = gameMemory.ReadUInt(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 30352928, 160, 4640, 384), 4844));
-            FrankX = gameMemory.ReadUInt(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 30352928, 200), 64));
-            FrankY = gameMemory.ReadUInt(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 30352928, 200), 68));
-            FrankZ = gameMemory.ReadUInt(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 30352928, 200), 72));
             BossHealth = gameMemory.ReadUInt(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 30352928, 280), 4844));
-            MainKillCount = gameMemory.ReadUInt(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 26582688), 944));
-            MovementLock1 = gameMemory.ReadUInt(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 26496472), 132024));
-            MovementLock2 = gameMemory.ReadUInt(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 26496472), 132028));
             loadingRoomId = gameMemory.ReadInt(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 26500976), 72));
-            jessieSpeaking = gameMemory.ReadByte(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 26496472, 134592), 794));
             Bombs = gameMemory.ReadByte(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 26496472, 134592), 33933));
             CletusActive = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134845));
             inCutsceneOrLoad = (gameMemory.ReadByte(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 26500976), 112)) & 1) == 1;
             inCutsceneOrLoad = (gameMemory.ReadByte(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 26500976), 112)) & 1) == 1;
+            MissionByte1 = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134777));
+            MissionByte2 = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134778));
+            MissionByte3 = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134779));
+            MissionByte4 = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134780));
+            MissionByte5 = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134781));
+            MissionByte6 = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134782));
+            MissionByte7 = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134788));
+            MissionByte8 = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134840));
+            MissionByte9 = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134841));
+            Carlito2Death = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134761));
+            CultistsByte = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134784));
             form.TimeDisplayUpdate(StringTime(gameTime));
             if (TimeskipOrder != null)
             {
@@ -421,706 +341,260 @@ namespace DR_RTM
             {
                 RandomizerStarted = false;
             }
-            if (cutsceneID == 8 && cGametask == 7 && startCutscene == false)
+            if (RandomizerStarted == true && cGametask == 7)
             {
-                if (Form1.spawnEnemies == 1 || Form1.spawnEnemies == 3)
+                if (!BytetoBit(MissionByte6, 5) && Form1.spawnEnemies == 1 || !BytetoBit(MissionByte6, 5) && Form1.spawnEnemies == 3)
                 {
-                    gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134782), 32);
+                    gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134782), (byte)(MissionByte6 + 32));
                 }
-                if (Form1.spawnEnemies == 2 || Form1.spawnEnemies == 3)
+                if (!BytetoBit(CultistsByte, 3) && Form1.spawnEnemies == 2 || !BytetoBit(CultistsByte, 3) && Form1.spawnEnemies == 3)
                 {
-                    gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134784), 64);
-                    if (CletusActive < 60)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134845), 60);
-                    }
+                    gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134784), (byte)(CultistsByte + 8));
                 }
-            }
-            if (TimeskipOrder.ElementAt(currentSkip) == "Tunnels" && JeepActivated == 129 && OnlyTriggerOnce == false && cutsceneID != 144 && loadingRoomId == 2818)
-            {
-                OnlyTriggerOnce = true;
-                startCutscene = true;
-                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 144);
-                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-            }
-            if (cGametask == 3 && cutsceneOnLoad == 0 && cutsceneID == LastCutsceneSkip && RandomizerStarted == true)
-            {
-                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-            }
-            if (cutsceneID == 48 && TimeskipOrder.ElementAt(currentSkip) == "Bomb Collector")
-            {
-                gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
-                gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 37);
-                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), 0);
             }
             if (SelectedCategory == "Timeskip" && Form1.TimeRandomized != DateTime.MinValue)
             {
-                if (cutsceneID == 8 && cGametask == 7)
+                if (cGametask == 3)
+                {
+                    OnlyTriggerOnce = false;
+                }
+                if (cutsceneID == 8 && RandomizerStarted == false)
                 {
                     RandomizerStarted = true;
-                    CurrentSkipOnce = true;
+                    gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(0));
+                    gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                 }
                 if (RandomizerStarted == true)
                 {
-                    if (campaignProgress == 400 && inCutsceneOrLoad)
+                    if (cutsceneID == TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(1) && cGametask == 7)
                     {
-                        CurrentSkipOnce = true;
-                        startCutscene = true;
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 10260000u);
-                    }
-                    if (campaignProgress == 400 && old.inCutsceneOrLoad && !inCutsceneOrLoad)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), gameTime + 18000 + 1);
-                    }
-                    if (campaignProgress == 402 && old.inCutsceneOrLoad && !inCutsceneOrLoad)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), gameTime + 18000 + 1);
-                    }
-                    if (campaignProgress == 404 && cGametask == 3)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), gameMemory.ReadUInt(IntPtr.Add(gameTimePtr, 408)) + 1);
-                    }
-                    if (campaignProgress == 402 && old.inCutsceneOrLoad && !inCutsceneOrLoad)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 10358001u);
-                    }
-                    if (campaignProgress == 404 && old.inCutsceneOrLoad && !inCutsceneOrLoad && TimeskipOrder.Count == 0)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 10368001u);
-                    }
-                    if (campaignProgress == 406 || campaignProgress == 410 || campaignProgress == 415)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), gameMemory.ReadUInt(IntPtr.Add(gameTimePtr, 408)) + 1);
-                    }
-                    if (old.campaignProgress != 410 && campaignProgress == 410 && TimeskipOrder.Count == 0)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 11448000u);
-                    }
-                    if (old.campaignProgress != 415 && campaignProgress == 415 && TimeskipOrder.Count == 0)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 11448000u);
-                    }
-                    if (campaignProgress == 420 && loadingRoomId == 288 && old.inCutsceneOrLoad && !inCutsceneOrLoad && TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == false && OnlyTriggerOnce == false)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 12000000u);
-                    }
-                    /// General stuff
-                    if (cGametask == 3 && cutsceneID != 7)
-                    {
-                        startCutscene = false;
-                        OnlyTriggerOnce = false;
-                        CurrentSkipOnce = false;
-                    }
-                    if (campaignProgress == 270 && cutsceneID == 30 && cGametask == 7)
-                    {
-                        SubKillCount = MainKillCount;
-                    }
-                    if (MovementLock1 == 0 && MovementLock2 == 0)
-                    {
-                        TicksElapsed = 0;
-                        BeforeMovementLockedTicks = DateTime.Now.Ticks;
-                    }
-                    if (MovementLock1 == 1024 && MovementLock2 == 1024)
-                    {
-                        MovementLockedTicks = DateTime.Now.Ticks;
-                        TicksElapsed = MovementLockedTicks - BeforeMovementLockedTicks;
-                    }
-                    if (currentSkip == 0)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 0);
-                    }
-                    if (currentSkip != 0)
-                    {
-                        if (cutsceneID == 42 && TimeskipOrder.ElementAt(currentSkip) != "Jessie's Discovery" && TimeskipOrder.ElementAt(currentSkip) != "Hideout" && TimeskipOrder.ElementAt(currentSkip) != "Memories")
+                        currentSkip++;
+                        if (cutsceneID != TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(0))
                         {
-                            startCutscene = false;
-                            OnlyTriggerOnce = false;
-                            gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), LastCutsceneSkip);
+                            gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(0));
                             gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                         }
-                        if (cutsceneID == 10 && TimeskipOrder.ElementAt(currentSkip - 1) != "Backup for Brad" && OnlyTriggerOnce == false && cGametask == 7)
+                    }
+                    if (TimeskipOrder.ElementAt(currentSkip).Key == "Ending" && loadingRoomId == 288 && gameTime < 11664000)
+                    {
+                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 11664000u);
+                    }
+                    if (!OvertimeMissions.Contains(TimeskipOrder.ElementAt(currentSkip).Key))
+                    {
+                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039872 + TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(2));
+                    }
+                    /// Ones with cGametask and cutsceneID force the boss music to play
+                    if (!BytetoBit(MissionByte1, 4) && TimeskipOrder.ElementAt(currentSkip).Key == "Backup For Brad" || !BytetoBit(MissionByte1, 4) && loadingRoomId == 534)
+                    {
+                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134777), (byte)(MissionByte1 + 16));
+                    }
+                    else if (BytetoBit(MissionByte1, 4) && TimeskipOrder.ElementAt(currentSkip).Key != "Backup For Brad" && loadingRoomId != 534)
+                    {
+                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134777), (byte)(MissionByte1 - 16));
+                    }
+                    if (!BytetoBit(MissionByte2, 0) && TimeskipOrder.ElementAt(currentSkip).Key == "A Temporary Agreement")
+                    {
+                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134778), (byte)(MissionByte2 + 1));
+                    }
+                    if (BytetoBit(MissionByte2, 0) && TimeskipOrder.ElementAt(currentSkip).Key != "A Temporary Agreement")
+                    {
+                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134778), (byte)(MissionByte2 - 1));
+                    }
+                    if (!BytetoBit(MissionByte3, 0) && TimeskipOrder.ElementAt(currentSkip).Key != "Medicine Run" && loadingRoomId == 1280 && cGametask == 3)
+                    {
+                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134779), (byte)(MissionByte3 + 1));
+                    }
+                    if (cGametask == 7 && OnlyTriggerOnce == true)
+                    {
+                        if (!BytetoBit(MissionByte1, 5) && TimeskipOrder.ElementAt(currentSkip).Key == "Backup For Brad" && cutsceneID == 9 && cGametask == 7)
                         {
-                            OnlyTriggerOnce = true;
-                            gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 0);
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134777), (byte)(MissionByte1 + 32));
                         }
-                        if (cutsceneID == 17 && TimeskipOrder.ElementAt(currentSkip - 1) != "Rescue The Professor" && OnlyTriggerOnce == false && cGametask == 7)
+                        if (BytetoBit(MissionByte1, 5) && TimeskipOrder.ElementAt(currentSkip).Key != "Backup For Brad")
                         {
-                            OnlyTriggerOnce = true;
-                            gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 0);
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134777), (byte)(MissionByte1 - 32));
                         }
-                        if (cutsceneID == 27 && TimeskipOrder.ElementAt(currentSkip - 1) != "Girl Hunting" && OnlyTriggerOnce == false && cGametask == 7)
+                        if (!BytetoBit(MissionByte1, 6) && TimeskipOrder.ElementAt(currentSkip).Key == "An Odd Old Man")
                         {
-                            OnlyTriggerOnce = true;
-                            gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 0);
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134777), (byte)(MissionByte1 + 64));
                         }
-                        if (cutsceneID == 45 && TimeskipOrder.ElementAt(currentSkip - 1) != "The Butcher" && OnlyTriggerOnce == false && cGametask == 7)
+                        if (BytetoBit(MissionByte1, 6) && TimeskipOrder.ElementAt(currentSkip).Key != "An Odd Old Man")
                         {
-                            OnlyTriggerOnce = true;
-                            gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 0);
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134777), (byte)(MissionByte1 - 64));
+                        }
+                        if (!BytetoBit(MissionByte2, 3) && TimeskipOrder.ElementAt(currentSkip).Key == "Rescue The Professor")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134778), (byte)(MissionByte2 + 8));
+                        }
+                        if (BytetoBit(MissionByte2, 3) && TimeskipOrder.ElementAt(currentSkip).Key != "Rescue The Professor")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134778), (byte)(MissionByte2 - 8));
+                        }
+                        if (!BytetoBit(MissionByte2, 4) && TimeskipOrder.ElementAt(currentSkip).Key == "Rescue The Professor" && cutsceneID == 16 && cGametask == 7)
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134778), (byte)(MissionByte2 + 16));
+                        }
+                        if (BytetoBit(MissionByte2, 4) && TimeskipOrder.ElementAt(currentSkip).Key == "Rescue The Professor" && cutsceneID != 16)
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134778), (byte)(MissionByte2 - 16));
+                        }
+                        if (!BytetoBit(MissionByte2, 4) && TimeskipOrder.ElementAt(currentSkip).Key != "Rescue The Professor")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134778), (byte)(MissionByte2 + 16));
+                        }
+                        if (!BytetoBit(MissionByte2, 5) && TimeskipOrder.ElementAt(currentSkip).Key != "Rescue The Professor")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134778), (byte)(MissionByte2 + 32));
+                        }
+                        if (BytetoBit(MissionByte2, 5) && TimeskipOrder.ElementAt(currentSkip).Key == "Rescue The Professor")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134778), (byte)(MissionByte2 - 32));
+                        }
+                        if (!BytetoBit(MissionByte3, 4) && TimeskipOrder.ElementAt(currentSkip).Key == "Girl Hunting")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134779), (byte)(MissionByte3 + 16));
+                        }
+                        if (BytetoBit(MissionByte3, 4) && TimeskipOrder.ElementAt(currentSkip).Key != "Girl Hunting")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134779), (byte)(MissionByte3 - 16));
+                        }
+                        if (!BytetoBit(MissionByte3, 5) && TimeskipOrder.ElementAt(currentSkip).Key == "Girl Hunting" && cutsceneID == 26 && cGametask == 7)
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134779), (byte)(MissionByte3 + 32));
+                        }
+                        if (BytetoBit(MissionByte3, 5) && TimeskipOrder.ElementAt(currentSkip).Key != "Girl Hunting")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134779), (byte)(MissionByte3 - 32));
+                        }
+                        if (!BytetoBit(MissionByte3, 6) && TimeskipOrder.ElementAt(currentSkip).Key == "A Promise To Isabella")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134779), (byte)(MissionByte3 + 64));
+                        }
+                        if (BytetoBit(MissionByte3, 6) && TimeskipOrder.ElementAt(currentSkip).Key == "Girl Hunting")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134779), (byte)(MissionByte3 - 64));
+                        }
+                        if (!BytetoBit(MissionByte4, 2) && TimeskipOrder.ElementAt(currentSkip).Key == "A Promise To Isabella" && cutsceneID == 30 && cGametask == 7)
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134780), (byte)(MissionByte4 + 4));
+                        }
+                        if (BytetoBit(MissionByte4, 2) && TimeskipOrder.ElementAt(currentSkip).Key != "A Promise To Isabella")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134780), (byte)(MissionByte4 - 4));
+                        }
+                        if (!BytetoBit(MissionByte4, 3) && TimeskipOrder.ElementAt(currentSkip).Key == "Transporting Isabella")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134780), (byte)(MissionByte4 + 8));
+                        }
+                        if (BytetoBit(MissionByte4, 3) && TimeskipOrder.ElementAt(currentSkip).Key != "Transporting Isabella")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134780), (byte)(MissionByte4 - 8));
+                        }
+                        if (!BytetoBit(MissionByte5, 0) && TimeskipOrder.ElementAt(currentSkip).Key == "Bomb Collector")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), (byte)(MissionByte5 + 1));
+                        }
+                        if (BytetoBit(MissionByte5, 0) && TimeskipOrder.ElementAt(currentSkip).Key != "Bomb Collector")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), (byte)(MissionByte5 - 1));
+                        }
+                        if (!BytetoBit(MissionByte5, 2) && TimeskipOrder.ElementAt(currentSkip).Key == "Jamming Device")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), (byte)(MissionByte5 + 4));
+                        }
+                        if (BytetoBit(MissionByte5, 2) && TimeskipOrder.ElementAt(currentSkip).Key != "Jamming Device")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), (byte)(MissionByte5 - 4));
+                        }
+                        if (!BytetoBit(MissionByte5, 4) && TimeskipOrder.ElementAt(currentSkip).Key == "Hideout")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), (byte)(MissionByte5 + 16));
+                        }
+                        if (BytetoBit(MissionByte5, 4) && TimeskipOrder.ElementAt(currentSkip).Key != "Hideout")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), (byte)(MissionByte5 - 16));
+                        }
+                        if (!BytetoBit(MissionByte5, 5) && TimeskipOrder.ElementAt(currentSkip).Key == "Jessie's Discovery")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), (byte)(MissionByte5 + 32));
+                        }
+                        if (BytetoBit(MissionByte5, 5) && TimeskipOrder.ElementAt(currentSkip).Key != "Jessie's Discovery")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), (byte)(MissionByte5 - 32));
+                        }
+                        if (!BytetoBit(MissionByte5, 6) && TimeskipOrder.ElementAt(currentSkip).Key == "The Butcher")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), (byte)(MissionByte5 + 64));
+                        }
+                        if (BytetoBit(MissionByte5, 6) && TimeskipOrder.ElementAt(currentSkip).Key != "The Butcher")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), (byte)(MissionByte5 - 64));
+                        }
+                        if (!BytetoBit(MissionByte5, 7) && TimeskipOrder.ElementAt(currentSkip).Key == "The Butcher" && cutsceneID == 46 && cGametask == 7)
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), (byte)(MissionByte5 + 128));
+                        }
+                        if (BytetoBit(MissionByte5, 7) && TimeskipOrder.ElementAt(currentSkip).Key != "The Butcher")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134780), (byte)(MissionByte5 - 128));
+                        }
+                        if (cutsceneID == 46 && BytetoBit(MissionByte6, 1) || TimeskipOrder.ElementAt(currentSkip).Key == "Ending" && BytetoBit(MissionByte6, 1))
+                        {
+                            gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134782), MissionByte6 - 2);
+                        }
+                        if (!BytetoBit(MissionByte7, 3) && TimeskipOrder.ElementAt(currentSkip).Key == "Hideout" && loadingRoomId == 1025)
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134788), (byte)(MissionByte7 + 8));
+                        }
+                        if (BytetoBit(MissionByte7, 3) && TimeskipOrder.ElementAt(currentSkip).Key != "Hideout")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134788), (byte)(MissionByte7 - 8));
+                        }
+                        if (!BytetoBit(MissionByte8, 3) && TimeskipOrder.ElementAt(currentSkip).Key == "Medicine Run")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134840), (byte)(MissionByte8 + 8));
+                        }
+                        if (BytetoBit(MissionByte8, 3) && TimeskipOrder.ElementAt(currentSkip).Key != "Medicine Run")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134840), (byte)(MissionByte8 - 8));
+                        }
+                        if (!BytetoBit(MissionByte8, 5) && TimeskipOrder.ElementAt(currentSkip).Key == "A Promise To Isabella")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134840), (byte)(MissionByte8 + 32));
+                        }
+                        if (BytetoBit(MissionByte8, 5) && TimeskipOrder.ElementAt(currentSkip).Key != "A Promise To Isabella")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134840), (byte)(MissionByte8 - 32));
+                        }
+                        if (!BytetoBit(MissionByte9, 0) && TimeskipOrder.ElementAt(currentSkip).Key == "Jamming Device")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841), (byte)(MissionByte9 + 1));
+                        }
+                        if (BytetoBit(MissionByte9, 0) && TimeskipOrder.ElementAt(currentSkip).Key != "Jamming Device")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841), (byte)(MissionByte9 - 1));
+                        }
+                        if (!BytetoBit(MissionByte9, 1) && TimeskipOrder.ElementAt(currentSkip).Key == "Memories")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841), (byte)(MissionByte9 + 2));
+                        }
+                        if (BytetoBit(MissionByte9, 1) && TimeskipOrder.ElementAt(currentSkip).Key != "Memories")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841), (byte)(MissionByte9 - 2));
+                        }
+                        if (BytetoBit(Carlito2Death, 1) && TimeskipOrder.ElementAt(currentSkip).Key == "Rescue The Professor")
+                        {
+                            gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134761), (byte)(Carlito2Death - 2));
                         }
                     }
-                    if (LastCutscene == 10 && cGametask == 7 && startCutscene == true)
+                    if (cGametask == 7)
                     {
-                        gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 20000);
-                    }
-                    if (LastCutscene == 17 && cGametask == 7 && startCutscene == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 30000);
-                    }
-                    if (LastCutscene == 27 && cGametask == 7 && startCutscene == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 30000);
-                    }
-                    if (LastCutscene == 45 && cGametask == 7 && startCutscene == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 50000);
+                        OnlyTriggerOnce = true;
                     }
                     /// General Anti-Softlock Code
                     if (caseMenuState == 19 && saveMenuState == 0)
                     {
                         gameMemory.WriteByte(IntPtr.Add(saveMenuStatePtr, 9956), 1);
-                    }
-                    if (campaignProgress > 354 && campaignProgress < 500 && loadingRoomId != 1025)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134788), 8);
-                    }
-                    if (campaignProgress < 354)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134788), 0);
-                    }
-                    if (campaignProgress > 499)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134788), 24);
-                    }
-                    if (cutsceneID == 48 && OnlyTriggerOnce == false && cGametask == 7)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), LastCutsceneSkip);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Supplies" && cutsceneID == 42 && OnlyTriggerOnce2 == false && cGametask == 7)
-                    {
-                        OnlyTriggerOnce2 = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 135);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                    }
-                    if (cutsceneID == 13 && startCutscene == true)
-                    {
-                        startCutscene = false;
-                    }
-                    if (cutsceneID == 48 && startCutscene == true)
-                    {
-                        startCutscene = false;
-                    }
-                    if (cutsceneID == 37 && cGametask == 7)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
-                    }
-                    if (cutsceneID == 47 && cGametask == 7)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
-                    }
-                    if (gameTime > 10367999 && TimeskipOrder.ElementAt(currentSkip) != " " && !TunnelsMissions.Contains(TimeskipOrder.ElementAt(currentSkip)))
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
-                    }
-                    if (cutsceneID == 17 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "Medicine Run")
-                    {
-                        startCutscene = false;
-                    }
-                    if (cutsceneID == 25 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "Girl Hunting")
-                    {
-                        startCutscene = false;
-                    }
-                    if (cutsceneID == 37 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "Bomb Collector")
-                    {
-                        startCutscene = false;
-                    }
-                    if (cutsceneID == 41 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "Hideout")
-                    {
-                        startCutscene = false;
-                    }
-                    if (cutsceneID == 43 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "The Butcher")
-                    {
-                        startCutscene = false;
-                    }
-                    if (cutsceneID == 47 && OnlyTriggerOnce == false && cGametask == 4)
-                    {
-                        startCutscene = false;
-                        CurrentSkipOnce = false;
-                        OnlyTriggerOnce = true;
-                    }
-                    if (cutsceneID == 42 && TimeskipOrder.ElementAt(currentSkip) == "Memories")
-                    {
-                        startCutscene = true;
-                        CurrentSkipOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 46);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Supplies" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), 96);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Queens" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), 96);
-                    }
-                    if (cutsceneID == 9 && TimeskipOrder.ElementAt(currentSkip) != "Backup For Brad" && cGametask == 3)
-                    {
-                        startCutscene = true;
-                        CurrentSkipOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 10);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 44 && TimeskipOrder.ElementAt(currentSkip) != "The Butcher" && cGametask == 3)
-                    {
-                        startCutscene = true;
-                        CurrentSkipOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 45);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 26 && TimeskipOrder.ElementAt(currentSkip) != "Girl Hunting" && cGametask == 3)
-                    {
-                        startCutscene = true;
-                        CurrentSkipOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 27);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 21 && TimeskipOrder.ElementAt(currentSkip) != "Medicine Run" && cGametask == 3)
-                    {
-                        startCutscene = true;
-                        CurrentSkipOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 22);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 9 && TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && BossHealth == 1 && cGametask == 3)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 10);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 16 && TimeskipOrder.ElementAt(currentSkip) == "Rescue The Professor" && BossHealth == 0 && cGametask == 3)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 17);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 21 && TimeskipOrder.ElementAt(currentSkip) == "Medicine Run" && TicksElapsed > 25000000 && cGametask == 3)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 22);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 26 && TimeskipOrder.ElementAt(currentSkip) == "Girl Hunting" && TicksElapsed > 5600000 && cGametask == 3)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 27);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 44 && TimeskipOrder.ElementAt(currentSkip) == "The Butcher" && TicksElapsed > 8000000 && cGametask == 3)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 45);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 144 && MovementLock1 == 1024 && MovementLock2 == 1024 && cGametask == 3 && TimeskipOrder.ElementAt(currentSkip) != " ")
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 144);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && cGametask == 3 && loadingRoomId == 2560 && cutsceneID != 9 && cutsceneID != 10)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 9);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Rescue The Professor" && cGametask == 3 && loadingRoomId == 256 && cutsceneID != 16 && cutsceneID != 17 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 16);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "The Butcher" && cGametask == 3 && loadingRoomId == 1537 && cutsceneID != 44 && cutsceneID != 45)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 44);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "A Promise To Isabella" && campaignProgress == 270 && cGametask == 3 && MainKillCount > SubKillCount)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 31);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 215 && jessieSpeaking == 168 && OnlyTriggerOnce == false && cGametask == 3 && loadingRoomId == 288)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 24);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 110 && loadingRoomId == 256 && FrankX > 1177777193 && FrankY < 1133903905 && FrankZ < 1182494445 && FrankZ > 1179252602 && OnlyTriggerOnce == false && cGametask == 3)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 12);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 130 && loadingRoomId == 288 && FrankX == 1181614080 && FrankZ == 1185910293 && OnlyTriggerOnce == false && cGametask == 3)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 13);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 250 && loadingRoomId == 1024 && FrankX == 3308748027 && FrankZ == 3329894401 && OnlyTriggerOnce == false && cGametask == 3)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 30);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 250 && loadingRoomId == 1024 && FrankX == 3309274885 && FrankZ == 3329894401 && OnlyTriggerOnce == false && cGametask == 3)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 30);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 320 && Bombs == 5 && loadingRoomId == 1536 && FrankX > 3327101379 && FrankZ > 3328263339 && FrankZ < 3329448231 && cGametask == 3 && OnlyTriggerOnce == false)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 39);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 340 && loadingRoomId == 288 && FrankX == 1181614080 && FrankZ == 1185910293 && OnlyTriggerOnce == false && cGametask == 3 && startCutscene == false)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 41);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 355 && loadingRoomId == 1025 && FrankX > 1155545513 && FrankX < 1159950332 && cGametask == 3 && OnlyTriggerOnce == false)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 42);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 360 && loadingRoomId == 288 && FrankX == 1181614080 && FrankZ == 1185910293 && OnlyTriggerOnce == false && cGametask == 3)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 43);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 390 && loadingRoomId == 1025 && FrankX > 1155545513 && FrankX < 1159950332 && cGametask == 3 && FactsTriggered == false)
-                    {
-                        FactsTriggered = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 46);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 47 && cGametask == 7 && startCutscene == false)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
-                    }
-                    /// Write Campaign Progress according to what randomized option you're on to prevent certain bosses from spawning and other strangeness
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && cGametask == 3 && cutsceneID != 9 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 80);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "An Odd Old Man" && cGametask == 3 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 110);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "A Temporary Agreement" && cGametask == 3 && cutsceneID != 13 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 130);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Rescue The Professor" && cGametask == 3 && cutsceneID != 16 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 160);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Medicine Run" && cGametask == 3 && campaignProgress != 190 && campaignProgress != 210 && campaignProgress != 215 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 180);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Girl Hunting" && cGametask == 3 && cutsceneID != 26 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 230);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "A Promise To Isabella" && cGametask == 3 && cutsceneID != 30 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 250);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Transporting Isabella" && cGametask == 3 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 280);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Bomb Collector" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 320);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jamming Device" && cGametask == 3 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 340);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Hideout" && cGametask == 3 && cutsceneID != 80 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 350);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jessie's Discovery" && cGametask == 3 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 360);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "The Butcher" && cGametask == 3 && cutsceneID != 44 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 370);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Memories" && cGametask == 3 && RandomizerStarted == true && loadingRoomId != 1025)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 390);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Supplies" && cutsceneID == 135 && RandomizerStarted == true || TimeskipOrder.ElementAt(currentSkip) == "Supplies" && cutsceneID == 42 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 500);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Queens" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 680);
-                    }
-                    /// Write Watch Cases according to what current randomized option is
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039872);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "An Odd Old Man" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039872);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "A Temporary Agreement" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039872);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Rescue The Professor" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039873);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Medicine Run" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039873);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Girl Hunting" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039875);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "A Promise To Isabella" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039876);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Transporting Isabella" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039876);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Bomb Collector" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039878);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jamming Device" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039879);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Hideout" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039879);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jessie's Discovery" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039879);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "The Butcher" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039879);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Memories" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039880);
-                    }
-                    /// Spawn Cases
-                    if (cGametask == 7 && CurrentSkipOnce == false && CutscenesToSkipOn.Contains(cutsceneID) && cutsceneID != 8 && OnlyTriggerOnce2 == false)
-                    {
-                        LastCutscene = cutsceneID;
-                        CurrentSkipOnce = true;
-                        currentSkip = currentSkip + 1;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 8)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 8);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 8;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "An Odd Old Man" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 10)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 10);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 10;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "A Temporary Agreement" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 3 && cutsceneID != 12)
-                    {
-                        CurrentSkipOnce = true;
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 12);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                        LastCutsceneSkip = 12;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Rescue The Professor" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 15)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 15);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 15;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Medicine Run" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 17)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 17);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 17;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Girl Hunting" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 25)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 25);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 25;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "A Promise To Isabella" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 27)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 27);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 27;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Transporting Isabella" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 31)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 31);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 31;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Bomb Collector" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 37)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 37);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 37;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jamming Device" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 39)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 39);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 39;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Hideout" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 41)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 41);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 41;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jessie's Discovery" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 42)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 42);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 41;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "The Butcher" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 43)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 43);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 43;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Memories" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 45)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 45);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 45;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Supplies" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 135)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 135);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 135;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Queens" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 132)
-                    {
-                        startCutscene = true;
-                        OnlyTriggerOnce = true;
-                        OnlyTriggerOnce2 = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 7);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Queens" && cutsceneID == 7 && cGametask == 3)
-                    {
-                        startCutscene = true;
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 132);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                        LastCutsceneSkip = 132;
-                        OnlyTriggerOnce2 = false;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Tunnels" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 126)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 126);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 126;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Tank" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 136)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 136);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 136;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Brock" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 144)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 144);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 144;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == false && cGametask == 7 && OnlyTriggerOnce == false && cutsceneID != 69)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 52);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == true && cGametask == 7 && OnlyTriggerOnce == false)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 134);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                     }
                 }
             }
@@ -1130,1233 +604,39 @@ namespace DR_RTM
                 if (cutsceneID == 8 && cGametask == 7 && RandomizerStarted == false)
                 {
                     RandomizerStarted = true;
-                    OnlyTriggerOnce = true;
                 }
                 if (RandomizerStarted == true)
                 {
-                    if (gameTime > 4535999)
+                    byte value = (byte)TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(3);
+                    gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841 + TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(4)), value);
+                    if (cGametask == 7 || TimeskipOrder.ElementAt(currentSkip).Key == "Mark of the Sniper" || TimeskipOrder.ElementAt(currentSkip).Key == "Convicts")
+                    {
+                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777740 + TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(2));
+                    }
+                    if (gameTime > 4535900)
                     {
                         gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 4212000u);
                     }
-                    if (cGametask == 3)
-                    {
-                        startCutscene = false;
-                    }
                     /// Goes to the next boss in the list
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Convicts" && Convicts1 == 0 && Convicts2 == 0 && Convicts3 == 0 && cGametask == 3 && loadingRoomId == 1792)
+                    if (TimeskipOrder.ElementAt(currentSkip).Key == "Convicts" && Convicts1 == 0 && Convicts2 == 0 && Convicts3 == 0 && cGametask == 3 && loadingRoomId == 1792)
                     {
-                        currentSkip = currentSkip + 1;
+                        currentSkip++;
                     }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Snipers" && Snipers1 == 0 && Snipers2 == 0 && Snipers3 == 0 && cGametask == 3 && loadingRoomId == 256)
+                    if (TimeskipOrder.ElementAt(currentSkip).Key == "Snipers" && Snipers1 == 0 && Snipers2 == 0 && Snipers3 == 0 && cGametask == 3 && loadingRoomId == 256)
                     {
-                        currentSkip = currentSkip + 1;
+                        currentSkip++;
                     }
-                    if (cGametask == 7 && startCutscene == false && CutscenesToSkipOn.Contains(cutsceneID))
+                    if (cGametask == 7 && cutsceneID == TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(1))
                     {
-                        startCutscene = true;
-                        currentSkip = currentSkip + 1;
+                        currentSkip++;
                     }
-                    /// Writes to memory what's required to make that boss spawn or play the ending cutscene
-                    if (TimeskipOrder.ElementAt(currentSkip) == " ")
+                    if (TimeskipOrder.ElementAt(currentSkip).Key == "Ending")
                     {
                         gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134789), 1);
                     }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Kent 3")
+                    if (TimeskipOrder.ElementAt(currentSkip).Key == "Adam")
                     {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841), 32);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Cliff")
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841), 64);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Sean" && loadingRoomId != 1024 && loadingRoomId != 1281)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841), 208);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Adam")
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134842), 17);
                         gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 135082), 128);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jo")
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134842), 210);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Paul")
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134842), 214);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Convicts")
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134844), 132);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Cletus" && CletusActive < 36)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134845), 36);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Snipers" && loadingRoomId != 1024)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134845), 77);
-                    }
-                    /// Writes to the watch the current boss you're on
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Kent 3" && RandomizerStarted == true && cutsceneID != 113)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777740);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Cliff" && RandomizerStarted == true && cutsceneID != 57)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777741);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Sean" && RandomizerStarted == true && cutsceneID != 58)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777742);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Adam" && RandomizerStarted == true && cutsceneID != 59)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777743);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jo" && RandomizerStarted == true && cutsceneID != 60)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777744);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Paul" && RandomizerStarted == true && cutsceneID != 61)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777745);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Snipers" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777751);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Cletus" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777759);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Convicts" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777983);
-                    }
-                }
-            }
-            else if (SelectedCategory == "All Bosses")
-            {
-                if (cutsceneID == 8)
-                {
-                    RandomizerStarted = true;
-                    CurrentSkipOnce = true;
-                }
-                if (RandomizerStarted == true)
-                {
-                    /// Timeskip Code
-                    if (campaignProgress == 400 && inCutsceneOrLoad)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 10260000u);
-                    }
-                    if (campaignProgress == 400 && old.inCutsceneOrLoad && !inCutsceneOrLoad)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), gameTime + 18000 + 1);
-                    }
-                    if (campaignProgress == 402 && old.inCutsceneOrLoad && !inCutsceneOrLoad)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), gameTime + 18000 + 1);
-                    }
-                    if (campaignProgress == 404 && cGametask == 3)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), gameMemory.ReadUInt(IntPtr.Add(gameTimePtr, 408)) + 1);
-                    }
-                    if (campaignProgress == 402 && old.inCutsceneOrLoad && !inCutsceneOrLoad)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 10358001u);
-                    }
-                    if (campaignProgress == 404 && old.inCutsceneOrLoad && !inCutsceneOrLoad && TimeskipOrder.Count == 0)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 10368001u);
-                    }
-                    if (campaignProgress == 406 || campaignProgress == 410 || campaignProgress == 415 && TimeskipOrder.Count == 0)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), gameMemory.ReadUInt(IntPtr.Add(gameTimePtr, 408)) + 1);
-                    }
-                    if (old.campaignProgress != 410 && campaignProgress == 410 && TimeskipOrder.Count == 0)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 11448000u);
-                    }
-                    if (old.campaignProgress != 415 && campaignProgress == 415 && TimeskipOrder.Count == 0)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 11448000u);
-                    }
-                    if (campaignProgress == 420 && loadingRoomId == 288 && old.inCutsceneOrLoad && !inCutsceneOrLoad && TimeskipOrder.ElementAt(currentSkip) == " " && includeOvertime == false)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 69);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 11664501u);
-                    }
-                    /// General Code
-                    if (cGametask == 3 && cutsceneID != 7)
-                    {
-                        startCutscene = false;
-                        OnlyTriggerOnce = false;
-                        CurrentSkipOnce = false;
-                    }
-                    if (campaignProgress == 270 && cutsceneID == 30 && cGametask == 7)
-                    {
-                        SubKillCount = MainKillCount;
-                    }
-                    if (MovementLock1 == 0 && MovementLock2 == 0)
-                    {
-                        TicksElapsed = 0;
-                        BeforeMovementLockedTicks = DateTime.Now.Ticks;
-                    }
-                    if (MovementLock1 == 1024 && MovementLock2 == 1024)
-                    {
-                        MovementLockedTicks = DateTime.Now.Ticks;
-                        TicksElapsed = MovementLockedTicks - BeforeMovementLockedTicks;
-                    }
-                    if (currentSkip == 0)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 0);
-                    }
-                    if (currentSkip != 0)
-                    {
-                        if (cutsceneID == 42 && TimeskipOrder.ElementAt(currentSkip) != "Jessie's Discovery" && TimeskipOrder.ElementAt(currentSkip - 1) != "Hideout")
-                        {
-                            startCutscene = false;
-                            OnlyTriggerOnce = false;
-                            gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), LastCutsceneSkip);
-                            gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        }
-                        if (cutsceneID == 10 && TimeskipOrder.ElementAt(currentSkip - 1) != "Backup for Brad" && OnlyTriggerOnce == false && cGametask == 7)
-                        {
-                            OnlyTriggerOnce = true;
-                            gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 0);
-                        }
-                        if (cutsceneID == 17 && TimeskipOrder.ElementAt(currentSkip - 1) != "Rescue The Professor" && OnlyTriggerOnce == false && cGametask == 7)
-                        {
-                            OnlyTriggerOnce = true;
-                            gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 0);
-                        }
-                        if (cutsceneID == 27 && TimeskipOrder.ElementAt(currentSkip - 1) != "Girl Hunting" && OnlyTriggerOnce == false && cGametask == 7)
-                        {
-                            OnlyTriggerOnce = true;
-                            gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 0);
-                        }
-                        if (cutsceneID == 45 && TimeskipOrder.ElementAt(currentSkip - 1) != "The Butcher" && OnlyTriggerOnce == false && cGametask == 7)
-                        {
-                            OnlyTriggerOnce = true;
-                            gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 0);
-                        }
-                    }
-                    if (LastCutscene == 10 && cGametask == 7 && startCutscene == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 20000);
-                    }
-                    if (LastCutscene == 17 && cGametask == 7 && startCutscene == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 30000);
-                    }
-                    if (LastCutscene == 27 && cGametask == 7 && startCutscene == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 30000);
-                    }
-                    if (LastCutscene == 45 && cGametask == 7 && startCutscene == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(PPRewardsPtr, 33628), 50000);
-                    }
-                    /// Softlock Prevention
-                    if (caseMenuState == 19 && saveMenuState == 0)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(saveMenuStatePtr, 9956), 1);
-                    }
-                    if (LastCutscene == 126 || LastCutscene > 135)
-                    {
-                        if (!TunnelsMissions.Contains(TimeskipOrder.ElementAt(currentSkip)) && cGametask == 3)
-                        {
-                            if (loadingRoomId == 2816 || loadingRoomId == 2817 || loadingRoomId == 2818 || loadingRoomId == 2819)
-                            {
-                                gameMemory.WriteUInt(IntPtr.Add(TeleportPtr, 440), 512);
-                            }
-                        }
-                    }
-                    if (gameTime > 10367999)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Supplies" && cutsceneID == 42 && OnlyTriggerOnce2 == false && cGametask == 7)
-                    {
-                        OnlyTriggerOnce2 = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 135);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Supplies" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), 96);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Queens" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134781), 96);
-                    }
-                    if (campaignProgress > 354 && campaignProgress < 500 && loadingRoomId != 1025)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134788), 8);
-                    }
-                    if (campaignProgress < 354)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134788), 0);
-                    }
-                    if (campaignProgress > 499)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134788), 24);
-                    }
-                    if (cutsceneID == 13 && startCutscene == true)
-                    {
-                        startCutscene = false;
-                    }
-                    if (cutsceneID == 48 && startCutscene == true)
-                    {
-                        startCutscene = false;
-                    }
-                    if (cutsceneID == 37 && cGametask == 7)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
-                    }
-                    if (cutsceneID == 47 && cGametask == 7)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
-                    }
-                    if (cutsceneID == 47 && OnlyTriggerOnce == false && cGametask == 4)
-                    {
-                        startCutscene = false;
-                        CurrentSkipOnce = false;
-                        OnlyTriggerOnce = true;
-                    }
-                    if (cutsceneID == 42 && TimeskipOrder.ElementAt(currentSkip) == "Memories")
-                    {
-                        startCutscene = true;
-                        CurrentSkipOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 46);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                    }
-                    if (gameTime > 10367999 && TimeskipOrder.ElementAt(currentSkip) != " " && !TunnelsMissions.Contains(TimeskipOrder.ElementAt(currentSkip)))
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
-                    }
-                    if (cutsceneID == 17 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "Medicine Run")
-                    {
-                        startCutscene = false;
-                    }
-                    if (cutsceneID == 25 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "Girl Hunting")
-                    {
-                        startCutscene = false;
-                    }
-                    if (cutsceneID == 37 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "Bomb Collector")
-                    {
-                        startCutscene = false;
-                    }
-                    if (cutsceneID == 41 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "Hideout")
-                    {
-                        startCutscene = false;
-                    }
-                    if (cutsceneID == 43 && startCutscene == true && TimeskipOrder.ElementAt(currentSkip) != "The Butcher")
-                    {
-                        startCutscene = false;
-                    }
-                    if (cutsceneID == 9 && TimeskipOrder.ElementAt(currentSkip) != "Backup For Brad" && cGametask == 3)
-                    {
-                        startCutscene = true;
-                        CurrentSkipOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 10);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 44 && TimeskipOrder.ElementAt(currentSkip) != "The Butcher" && cGametask == 3)
-                    {
-                        startCutscene = true;
-                        CurrentSkipOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 45);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 26 && TimeskipOrder.ElementAt(currentSkip) != "Girl Hunting" && cGametask == 3)
-                    {
-                        startCutscene = true;
-                        CurrentSkipOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 27);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 21 && TimeskipOrder.ElementAt(currentSkip) != "Medicine Run" && cGametask == 3)
-                    {
-                        startCutscene = true;
-                        CurrentSkipOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 22);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 9 && TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && BossHealth == 1 && cGametask == 3)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 10);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 16 && TimeskipOrder.ElementAt(currentSkip) == "Rescue The Professor" && TicksElapsed > 3000000 && cGametask == 3)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 17);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 21 && TimeskipOrder.ElementAt(currentSkip) == "Medicine Run" && TicksElapsed > 25000000 && cGametask == 3)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 22);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 26 && TimeskipOrder.ElementAt(currentSkip) == "Girl Hunting" && TicksElapsed > 5600000 && cGametask == 3)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 27);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 44 && TimeskipOrder.ElementAt(currentSkip) == "The Butcher" && TicksElapsed > 8000000 && cGametask == 3)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 45);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 144 && MovementLock1 == 1024 && MovementLock2 == 1024 && cGametask == 3 && TimeskipOrder.ElementAt(currentSkip) != " ")
-                    {
-                        if (!PsychoSkips.Contains(TimeskipOrder.ElementAt(currentSkip + 1)))
-                        {
-                            gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 144);
-                            gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                            gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                        }
-                        else if (PsychoSkips.Contains(TimeskipOrder.ElementAt(currentSkip + 1)) && OnlyTriggerOnce == false)
-                        {
-                            OnlyTriggerOnce = true;
-                            currentSkip = currentSkip + 1;
-                            gameMemory.WriteUInt(IntPtr.Add(TeleportPtr, 440), 512);
-                        }
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && cGametask == 3 && loadingRoomId == 2560 && cutsceneID != 9 && cutsceneID != 10)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 9);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Rescue The Professor" && cGametask == 3 && loadingRoomId == 256 && cutsceneID != 16 && cutsceneID != 17 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 16);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "The Butcher" && cGametask == 3 && loadingRoomId == 1537 && cutsceneID != 44 && cutsceneID != 45)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 44);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "A Promise To Isabella" && campaignProgress == 270 && cGametask == 3 && MainKillCount > SubKillCount)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 31);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 215 && jessieSpeaking == 168 && OnlyTriggerOnce == false && cGametask == 3 && loadingRoomId == 288)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 24);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 110 && loadingRoomId == 256 && FrankX > 1177777193 && FrankY < 1133903905 && FrankZ < 1182494445 && FrankZ > 1179252602 && OnlyTriggerOnce == false && cGametask == 3)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 12);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 130 && loadingRoomId == 288 && FrankX == 1181614080 && FrankZ == 1185910293 && OnlyTriggerOnce == false && cGametask == 3)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 13);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 250 && loadingRoomId == 1024 && FrankX == 3308748027 && FrankZ == 3329894401 && OnlyTriggerOnce == false && cGametask == 3)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 30);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 250 && loadingRoomId == 1024 && FrankX == 3309274885 && FrankZ == 3329894401 && OnlyTriggerOnce == false && cGametask == 3)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 30);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 320 && Bombs == 5 && loadingRoomId == 1536 && FrankX > 3327101379 && FrankZ > 3328263339 && FrankZ < 3329448231 && cGametask == 3 && OnlyTriggerOnce == false)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 39);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 340 && loadingRoomId == 288 && FrankX == 1181614080 && FrankZ == 1185910293 && OnlyTriggerOnce == false && cGametask == 3 && startCutscene == false)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 41);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 355 && loadingRoomId == 1025 && FrankX > 1155545513 && FrankX < 1159950332 && cGametask == 3 && OnlyTriggerOnce == false)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 42);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 360 && loadingRoomId == 288 && FrankX == 1181614080 && FrankZ == 1185910293 && OnlyTriggerOnce == false && cGametask == 3)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 43);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (campaignProgress == 390 && loadingRoomId == 1025 && FrankX > 1155545513 && FrankX < 1159950332 && cGametask == 3 && FactsTriggered == false)
-                    {
-                        FactsTriggered = true;
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneIDPtr, 33544), 46);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    if (cutsceneID == 47 && cGametask == 7 && startCutscene == false)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), 3888000u);
-                    }
-                    /// Force Cases to spawn
-                    if (cGametask == 7 && CurrentSkipOnce == false && CutscenesToSkipOn.Contains(cutsceneID) && cutsceneID != 8 && OnlyTriggerOnce2 == false)
-                    {
-                        LastCutscene = cutsceneID;
-                        CurrentSkipOnce = true;
-                        currentSkip = currentSkip + 1;
-                    }
-                    if (cutsceneID == 8 && Form1.spawnEnemies != 0)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134782), 32);
-                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134784), 64);
-                        gameMemory.WriteInt(IntPtr.Add(SpawnBossesPtr, 134845), 60);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Convicts" && Convicts1 == 0 && Convicts2 == 0 && Convicts3 == 0 && cGametask == 3 && loadingRoomId == 1792)
-                    {
-                        currentSkip = currentSkip + 1;
-                        if (!PsychoSkips.Contains(TimeskipOrder.ElementAt(currentSkip)))
-                        {
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 8);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 8;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "An Odd Old Man" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 10);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 10;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "A Temporary Agreement" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 12);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 12;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Rescue The Professor" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 15);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 15;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Medicine Run" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 17);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 17;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Girl Hunting" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 25);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 25;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "A Promise To Isabella" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 27);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 27;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Transporting Isabella" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 31);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 31;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Bomb Collector" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 37);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 37;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Jamming Device" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 39);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 39;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Hideout" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 41);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 41;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Jessie's Discovery" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 42);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 42;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "The Butcher" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 43);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 43;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Memories" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 45);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 45;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Supplies" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 135);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 135;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Queens" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                OnlyTriggerOnce = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 7);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Queens" && startCutscene == false && cGametask == 7 && cutsceneID != 132)
-                            {
-                                startCutscene = true;
-                                OnlyTriggerOnce2 = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 7);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                OnlyTriggerOnce2 = false;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Queens" && cutsceneID == 7 && cGametask == 3)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 132);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                OnlyTriggerOnce2 = false;
-                                LastCutsceneSkip = 132;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Tunnels" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 126);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 126;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Tank" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 136);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 136;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Brock" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 144);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 144;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == " ")
-                            {
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 134);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                            }
-                            currentSkip = currentSkip - 1;
-                        }
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Snipers" && Snipers1 == 0 && Snipers2 == 0 && Snipers3 == 0 && cGametask == 3 && loadingRoomId == 256)
-                    {
-                        currentSkip = currentSkip + 1;
-                        if (!PsychoSkips.Contains(TimeskipOrder.ElementAt(currentSkip)))
-                        {
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 8);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 8;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "An Odd Old Man" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 10);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 10;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "A Temporary Agreement" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 12);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 12;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Rescue The Professor" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 15);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 15;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Medicine Run" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 17);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 17;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Girl Hunting" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 25);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 25;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "A Promise To Isabella" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 27);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 27;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Transporting Isabella" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 31);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 31;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Bomb Collector" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 37);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 37;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Jamming Device" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 39);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 39;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Hideout" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 41);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 41;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Jessie's Discovery" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 42);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 42;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "The Butcher" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 43);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 43;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Memories" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 45);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 45;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Supplies" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 135);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 135;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Queens" && startCutscene == false && cGametask == 7 && cutsceneID != 132)
-                            {
-                                startCutscene = true;
-                                OnlyTriggerOnce = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 7);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Queens" && cutsceneID == 7 && cGametask == 3)
-                            {
-                                startCutscene = true;
-                                OnlyTriggerOnce = true;
-                                OnlyTriggerOnce2 = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 132);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 132;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Tunnels" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 126);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                OnlyTriggerOnce2 = false;
-                                LastCutsceneSkip = 126;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Tank" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 136);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 136;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == "Brock" && startCutscene == false)
-                            {
-                                startCutscene = true;
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 144);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                                LastCutsceneSkip = 144;
-                            }
-                            if (TimeskipOrder.ElementAt(currentSkip) == " ")
-                            {
-                                gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 134);
-                                gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                                gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                            }
-                            currentSkip = currentSkip - 1;
-                        }
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 8)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 8);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 8;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "An Odd Old Man" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 10)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 10);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 10;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "A Temporary Agreement" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 12)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 12);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 12;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Rescue The Professor" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 15)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 15);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 15;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Medicine Run" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 17)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 17);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 17;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Girl Hunting" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 25)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 25);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 25;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "A Promise To Isabella" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 27)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 27);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 27;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Transporting Isabella" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 31)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 31);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 31;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Bomb Collector" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 37)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 37);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 37;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jamming Device" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 39)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 39);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 39;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Hideout" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 41)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 41);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 41;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jessie's Discovery" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 42)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 42);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 42;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "The Butcher" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 43)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 43);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 43;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Memories" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 45)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 45);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 45;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Supplies" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 135)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 135);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 135;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Queens" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 132)
-                    {
-                        startCutscene = true;
-                        OnlyTriggerOnce = true;
-                        OnlyTriggerOnce2 = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 7);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Queens" && cutsceneID == 7 && cGametask == 3)
-                    {
-                        startCutscene = true;
-                        OnlyTriggerOnce = true;
-                        OnlyTriggerOnce2 = false;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 132);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                        LastCutsceneSkip = 132;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Tunnels" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 126)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 126);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 126;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Tank" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 136)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 136);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 136;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Brock" && CutscenesToSkipOn.Contains(cutsceneID) && startCutscene == false && cGametask == 7 && cutsceneID != 144)
-                    {
-                        startCutscene = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 144);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        LastCutsceneSkip = 144;
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == " " && cGametask == 3 && cutsceneID != 144 && OnlyTriggerOnce == false)
-                    {
-                        OnlyTriggerOnce = true;
-                        gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), 134);
-                        gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
-                        gameMemory.WriteByte(IntPtr.Add(cGametaskPtr, 56), 4);
-                    }
-                    /// Force Bosses to spawn
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Kent 3" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841), 32);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Cliff" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841), 64);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Sean" && loadingRoomId != 1281 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134841), 208);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Adam" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134842), 17);
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 135082), 128);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jo" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134842), 210);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Paul" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134842), 214);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Convicts" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134844), 132);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Cletus" && RandomizerStarted == true && CletusActive < 36)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134845), 36);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Snipers" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteByte(IntPtr.Add(SpawnBossesPtr, 134845), 77);
-                    }
-                    /// Writes campaign progress to make sure certain bosses aren't killed early and so the game doesn't overwrite it itself and softlock the player
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && cGametask == 3 && cutsceneID != 9 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 80);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "An Odd Old Man" && cGametask == 3 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 110);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "A Temporary Agreement" && cGametask == 3 && cutsceneID != 13 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 130);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Rescue The Professor" && cGametask == 3 && cutsceneID != 16 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 160);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Medicine Run" && cGametask == 3 && campaignProgress != 190 && campaignProgress != 210 && campaignProgress != 215 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 180);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Girl Hunting" && cGametask == 3 && cutsceneID != 26 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 230);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "A Promise To Isabella" && cGametask == 3 && cutsceneID != 30 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 250);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Transporting Isabella" && cGametask == 3 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 280);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Bomb Collector" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 320);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jamming Device" && cGametask == 3 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 340);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Hideout" && cGametask == 3 && cutsceneID != 80 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 350);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jessie's Discovery" && cGametask == 3 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 360);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "The Butcher" && cGametask == 3 && cutsceneID != 44 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 370);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Memories" && cGametask == 3 && RandomizerStarted == true && loadingRoomId != 1025)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 390);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Supplies" && cutsceneID == 135 && RandomizerStarted == true || TimeskipOrder.ElementAt(currentSkip) == "Supplies" && cutsceneID == 42 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 500);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Queens" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteUInt(IntPtr.Add(campaignProgressPtr, 336), 680);
-                    }
-                    /// Writes to the watch the current case the player is on
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Backup For Brad" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039872);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "An Odd Old Man" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039872);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "A Temporary Agreement" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039872);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Rescue The Professor" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039873);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Medicine Run" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039873);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Girl Hunting" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039875);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "A Promise To Isabella" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039876);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Transporting Isabella" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039876);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Bomb Collector" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039878);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jamming Device" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039879);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Hideout" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039879);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jessie's Discovery" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039879);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "The Butcher" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039879);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Memories" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8024), 17039880);
-                    }
-                    /// Writes to the watch the current boss the player is on
-                    if (!PsychoSkips.Contains(TimeskipOrder.ElementAt(currentSkip)))
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 0);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Kent 3" && cutsceneID != 113 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777740);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Cliff" && cutsceneID != 57 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777741);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Sean" && cutsceneID != 58 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777742);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Adam" && cutsceneID != 59 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777743);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Jo" && cutsceneID != 60 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777744);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Paul" && cutsceneID != 61 && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777745);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Snipers" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777751);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Cletus" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777759);
-                    }
-                    if (TimeskipOrder.ElementAt(currentSkip) == "Convicts" && RandomizerStarted == true)
-                    {
-                        gameMemory.WriteInt(IntPtr.Add(WatchCaseDisplayPtr, 8031), 16777983);
                     }
                 }
             }
