@@ -31,12 +31,6 @@ namespace DR_RTM
 
         public static List<string> PsychoSkips = new() { "Kent 3", "Convicts", "Sean", "Snipers", "Adam", "Jo", "Paul", "Cletus", "Cliff" };
 
-        public static long TicksElapsed;
-
-        public static long BeforeMovementLockedTicks;
-
-        public static long MovementLockedTicks;
-
         public static byte MissionByte1;
         public static byte MissionByte2;
         public static byte MissionByte3;
@@ -68,13 +62,9 @@ namespace DR_RTM
 
         private static IntPtr WatchCaseDisplayPtr;
 
-        private static IntPtr PPRewardsPtr;
-
         private static IntPtr campaignProgressPtr;
 
         private static IntPtr SpawnBossesPtr;
-
-        private static IntPtr TeleportPtr;
 
         public static string SelectedCategory = "Timeskip";
 
@@ -84,13 +74,9 @@ namespace DR_RTM
 
         public static uint LastCutscene;
 
-        public static uint Teleport;
-
-        public static uint cutsceneOnLoad;
+        public static byte cutsceneOnLoad;
 
         public static byte cGametask;
-
-        private static byte SpawnBosses;
 
         private static byte WatchCaseDisplay;
 
@@ -204,6 +190,7 @@ namespace DR_RTM
             gameMemory.WriteUInt(IntPtr.Add(DeadRisingPtr, 3173063), 26774409);
             gameMemory.WriteUInt(IntPtr.Add(DeadRisingPtr, 3173444), 26774409);
             gameMemory.WriteUInt(IntPtr.Add(DeadRisingPtr, 3187063), 26774409);
+            gameMemory.WriteUInt(IntPtr.Add(DeadRisingPtr, 627048), 22053063);
         }
         public static void CreateList()
         {
@@ -213,20 +200,20 @@ namespace DR_RTM
                 /// Format is: Cutscene ID to be written to start mission, Cutscene ID when mission is finished, 
                 /// an integer to be added to another integer to tell the game which mission is being written to the watch, any potential bytes to spawn bosses/survivors,
                 /// and finally a byte to specify which pointer the boss/survivor integer needs to be written to.
-                TimeskipOrder.Add("Backup For Brad", new int[] { 8, 10, 0, 0, 1});
-                TimeskipOrder.Add("An Odd Old Man", new int[] { 10, 12, 0, 0, 2});
-                TimeskipOrder.Add("A Temporary Agreement", new int[] { 12, 13, 0, 3});
-                TimeskipOrder.Add("Rescue The Professor", new int[] { 15, 17, 1, 4});
-                TimeskipOrder.Add("Medicine Run", new int[] { 17, 24, 1, 5});
-                TimeskipOrder.Add("Girl Hunting", new int[] { 25, 27, 3, 6});
-                TimeskipOrder.Add("A Promise To Isabella", new int[] { 27, 31, 4, 7});
-                TimeskipOrder.Add("Transporting Isabella", new int[] { 31, 33, 4, 8});
-                TimeskipOrder.Add("Bomb Collector", new int[] { 37, 39, 6, 9});
-                TimeskipOrder.Add("Jamming Device", new int[] { 39, 41, 7, 10});
-                TimeskipOrder.Add("Hideout", new int[] { 41, 42, 7, 11});
-                TimeskipOrder.Add("Jessie's Discovery", new int[] { 42, 43, 7, 12});
-                TimeskipOrder.Add("The Butcher", new int[] { 43, 45, 7, 13});
-                TimeskipOrder.Add("Memories", new int[] { 45, 46, 8, 14});
+                TimeskipOrder.Add("Backup For Brad", new int[] { 8, 10, 0, 0, 1, 3888000});
+                TimeskipOrder.Add("An Odd Old Man", new int[] { 10, 12, 0, 0, 2, 3888000});
+                TimeskipOrder.Add("A Temporary Agreement", new int[] { 12, 13, 0, 3, 3888000});
+                TimeskipOrder.Add("Rescue The Professor", new int[] { 15, 17, 1, 4, 5832000});
+                TimeskipOrder.Add("Medicine Run", new int[] { 17, 24, 1, 5, 5832000});
+                TimeskipOrder.Add("Girl Hunting", new int[] { 25, 27, 3, 6, 6804000});
+                TimeskipOrder.Add("A Promise To Isabella", new int[] { 27, 31, 4, 7, 7776000});
+                TimeskipOrder.Add("Transporting Isabella", new int[] { 31, 33, 4, 8, 7776000});
+                TimeskipOrder.Add("Bomb Collector", new int[] { 37, 39, 6, 9, 8964000});
+                TimeskipOrder.Add("Jamming Device", new int[] { 39, 41, 7, 10, 9612000});
+                TimeskipOrder.Add("Hideout", new int[] { 41, 42, 7, 11, 9612000});
+                TimeskipOrder.Add("Jessie's Discovery", new int[] { 42, 43, 7, 12, 9612000});
+                TimeskipOrder.Add("The Butcher", new int[] { 43, 45, 7, 13, 9612000});
+                TimeskipOrder.Add("Memories", new int[] { 45, 46, 8, 14, 10152000});
                 if (includeOvertime == true)
                 {
                     TimeskipOrder.Add("Supplies", new int[] { 135, 132 });
@@ -286,25 +273,19 @@ namespace DR_RTM
             DeadRisingPtr = gameMemory.Pointer("DeadRising.exe");
             cutsceneIDPtr = gameMemory.Pointer("DeadRising.exe", 26496472, 134592);
             cutsceneOnLoadPtr = gameMemory.Pointer("DeadRising.exe", 26496472, 134592);
-            PPRewardsPtr = gameMemory.Pointer("DeadRising.exe", 26496472, 134592);
             cGametaskPtr = gameMemory.Pointer("DeadRising.exe", 26496472, 134592);
             campaignProgressPtr = gameMemory.Pointer("DeadRising.exe", 26496472, 134592);
-            TeleportPtr = gameMemory.Pointer("DeadRising.exe", 26496472, 134592);
             caseMenuStatePtr = gameMemory.Pointer("DeadRising.exe", 26505152, 192600);
             saveMenuStatePtr = gameMemory.Pointer("DeadRising.exe", 30352928, 1160);
             WatchCaseDisplayPtr = gameMemory.Pointer("DeadRising.exe", 30510208);
             SpawnBossesPtr = gameMemory.Pointer("DeadRising.exe", 26496472);
-            SpawnBosses = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134841));
-            JeepActivated = gameMemory.ReadByte(IntPtr.Add(SpawnBossesPtr, 134826));
             caseMenuState = gameMemory.ReadByte(IntPtr.Add(caseMenuStatePtr, 386));
             saveMenuState = gameMemory.ReadByte(IntPtr.Add(saveMenuStatePtr, 9956));
             cGametask = gameMemory.ReadByte(IntPtr.Add(cGametaskPtr, 56));
             WatchCaseDisplay = gameMemory.ReadByte(IntPtr.Add(WatchCaseDisplayPtr, 8024));
-            Teleport = gameMemory.ReadUInt(IntPtr.Add(TeleportPtr, 440));
-            PPRewards = gameMemory.ReadUInt(IntPtr.Add(PPRewardsPtr, 33628));
             cutsceneID = gameMemory.ReadUInt(IntPtr.Add(cutsceneIDPtr, 33544));
             campaignProgress = gameMemory.ReadUInt(IntPtr.Add(campaignProgressPtr, 336));
-            cutsceneOnLoad = gameMemory.ReadUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552));
+            cutsceneOnLoad = gameMemory.ReadByte(IntPtr.Add(cutsceneOnLoadPtr, 33552));
             gameTime = gameMemory.ReadUInt(IntPtr.Add(gameTimePtr, 408));
             Snipers1 = gameMemory.ReadUInt(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 30352928, 280), 4844));
             Snipers2 = gameMemory.ReadUInt(IntPtr.Add(gameMemory.Pointer("DeadRising.exe", 30352928, 280, 16), 4844));
@@ -336,6 +317,7 @@ namespace DR_RTM
                 gameMemory.WriteUInt(IntPtr.Add(DeadRisingPtr, 3173063), 26774272);
                 gameMemory.WriteUInt(IntPtr.Add(DeadRisingPtr, 3173444), 26774272);
                 gameMemory.WriteUInt(IntPtr.Add(DeadRisingPtr, 3187063), 26774272);
+                gameMemory.WriteUInt(IntPtr.Add(DeadRisingPtr, 627048), 2425393296);
             }
             if (campaignProgress == 10)
             {
@@ -361,18 +343,20 @@ namespace DR_RTM
                 if (cutsceneID == 8 && RandomizerStarted == false)
                 {
                     RandomizerStarted = true;
+                    gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), (uint)TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(4));
                     gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(0));
-                    gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
+                    gameMemory.WriteByte(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                 }
                 if (RandomizerStarted == true)
                 {
                     if (cutsceneID == TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(1) && cGametask == 7)
                     {
                         currentSkip++;
+                        gameMemory.WriteUInt(IntPtr.Add(gameTimePtr, 408), (uint)TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(4));
                         if (cutsceneID != TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(0))
                         {
                             gameMemory.WriteInt(IntPtr.Add(cutsceneIDPtr, 33544), TimeskipOrder.ElementAt(currentSkip).Value.ElementAt(0));
-                            gameMemory.WriteUInt(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
+                            gameMemory.WriteByte(IntPtr.Add(cutsceneOnLoadPtr, 33552), 0);
                         }
                     }
                     if (TimeskipOrder.ElementAt(currentSkip).Key == "Ending" && loadingRoomId == 288 && gameTime < 11664000)

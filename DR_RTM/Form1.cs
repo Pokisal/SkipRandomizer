@@ -511,6 +511,9 @@ namespace DR_RTM
                 TimeSkip.SeedRandomizer();
             }
             TimeSkip.Randomize();
+            ///TimeSkip.TimeskipOrder.Clear();
+            ///TimeSkip.TimeskipOrder.Add("Rescue The Professor", new int[] { 15, 17, 1, 4, 5832000 });
+            ///TimeSkip.TimeskipOrder.Add("A Temporary Agreement", new int[] { 12, 13, 0, 3, 3888000 });
             TimeSkip.currentSkip = 0;
             MaxSkips = TimeSkip.TimeskipOrder.Count;
             textBox1.Text = null;
